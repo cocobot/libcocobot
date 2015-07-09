@@ -40,7 +40,7 @@ int cocobot_console_handle_freertos(char * command, char * arguments)
   if(strcmp(command,"freertos") == 0)
   {
     xTaskStatusType tasks[10];
-    int tasks_num = uxTaskGetSystemState(tasks, 10, NULL);
+    int tasks_num = 0; //uxTaskGetSystemState(tasks, 10, NULL);
     for(int i = 0; i < tasks_num; i += 1)
     {
       snprintf(buffer, sizeof(buffer), "%s,%lu,%lu,%lu,%d", 
