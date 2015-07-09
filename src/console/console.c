@@ -14,6 +14,8 @@
 static mcual_usart_id_t usart;
 static char buffer[COCOBOT_CONSOLE_BUFFER_LENGTH];
 static unsigned int buffer_position;
+static cocobot_console_handler_t user_handler;
+static char * arguments;
 
 static void cocobot_console_send_string(char * str)
 {
@@ -41,12 +43,13 @@ int cocobot_console_handle_freertos(char * command, char * arguments)
   {
     xTaskStatusType tasks[10];
     int tasks_num = 0; //uxTaskGetSystemState(tasks, 10, NULL);
-    for(int i = 0; i < tasks_num; i += 1)
+    int i;
+    for(i = 0; i < tasks_num; i += 1)
     {
       snprintf(buffer, sizeof(buffer), "%s,%lu,%lu,%lu,%d", 
                tasks[i].pcTaskName,
-               tasks[i].uxCurrentPriority,
-               tasks[i].uxBasePriority,
+               (long unsigned int)tasks[i].uxCurrentPriority,
+               (long unsigned int)tasks[i].uxBasePriority,
                tasks[i].ulRunTimeCounter,
                tasks[i].usStackHighWaterMark
                );
@@ -59,13 +62,51 @@ int cocobot_console_handle_freertos(char * command, char * arguments)
   return 0;
 }
 
+int cocobot_console_get_iargument(int id)
+{
+  char * ptr = arguments;
+  while(*ptr)
+  {
+    if(id == 0)
+    {
+      int r = 0;
+      int sgn = 1;
+      while(*ptr)
+      {
+        if(*ptr == ' ')
+        {
+          break;
+        }
+        else if(*ptr == '-')
+        {
+          sgn = -1;
+        }
+        else if((*ptr >= '0') && (*ptr <= '9'))
+        {
+          r *= 10;
+          r += *ptr - '0';
+        }
+        ptr += 1;
+      }
+      return r * sgn;
+    }
+    if(*ptr == ' ')
+    {
+      id -= 1;
+    }
+    ptr += 1;
+  }
+
+  return 0;
+}
+
 void cocobot_console_thread(void *arg)
 {
   (void)arg;
   
   cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
   cocobot_console_send_asynchronous("console", "system started");
-    cocobot_console_send_string(COCOBOT_CONSOLE_USER_INPUT_START);
+  cocobot_console_send_string(COCOBOT_CONSOLE_USER_INPUT_START);
   while(pdTRUE)
   {
     uint8_t recv = mcual_usart_recv(usart);
@@ -77,26 +118,30 @@ void cocobot_console_thread(void *arg)
         buffer[buffer_position] = 0;
 
         char * cmd = buffer;
-        char * args = buffer;
-        while(*args)
+        arguments = buffer;
+        while(*arguments)
         {
-          if(*args == ' ')
+          if(*arguments == ' ')
           {
-            *args = 0;
-            args += 1;
+            *arguments = 0;
+            arguments += 1;
             break;
           }
-          args += 1;
+          arguments += 1;
         }
 
         cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
 
         int handled = 0;
-        handled = cocobot_console_handle_freertos(cmd, args);
+        handled = cocobot_console_handle_freertos(cmd, arguments);
 
         if(!handled)
         {
-          cocobot_console_send_string("invalid command: ");
+          handled = user_handler(cmd);
+        }
+
+        if(!handled)
+        {
           cocobot_console_send_string("invalid command: '");
           cocobot_console_send_string(cmd);
           cocobot_console_send_string("'" COCOBOT_CONSOLE_END_LINE);
@@ -118,12 +163,13 @@ void cocobot_console_thread(void *arg)
   }
 }
 
-void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority)
+void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority, cocobot_console_handler_t handler)
 {
   usart = usart_id;
   buffer_position = 0;
+  user_handler = handler;
 
   mcual_usart_init(usart, 115200);
 
-  xTaskCreate(cocobot_console_thread, (const signed char *)"console", 512, NULL, priority, NULL );
+  xTaskCreate(cocobot_console_thread, "console", 512, NULL, priority, NULL );
 }
