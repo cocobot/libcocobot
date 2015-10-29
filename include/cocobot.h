@@ -3,5 +3,6 @@
 
 #include <cocobot/position.h>
 #include <cocobot/console.h>
+#include <cocobot/lcd.h>
 
 #endif// COCOBOT_H
