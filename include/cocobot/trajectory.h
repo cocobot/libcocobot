@@ -77,4 +77,13 @@ trajectory_result_t trajectory_wait(trajectory_handle_t order);
  */
 void trajectory_stop(void):
 
+/* Pause orders (can be resume by calling trajectory_resume). Robot will wait without moving
+ */
+void trajectory_pause(void):
+
+/* Resume paused orders
+ */
+void trajectory_resume(void):
+
+
 #endif// TRAJECTORY_H
