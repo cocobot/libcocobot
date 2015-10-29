@@ -57,6 +57,46 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_xy(float x, float y, float t
  */
 cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_backward(float x, float y, float time);
 
+/* Goto xy circle order
+ * Arguments:
+ *  - xi: x coord of the intermediate point
+ *  - yi: y coord of the intermediate point
+ *  - xe: x coord of the ending point
+ *  - ye: y coord of the ending point
+ *  - time: Maximum allowed time in s for the order (or COCOBOT_TRAJECTORY_UNLIMITED_TIME for no timeout)
+ * Return:
+ *    An unique id for order identification
+ *
+ * Info:
+ *                _intermediate
+ *               /             \
+ *              /               ending point
+ *              |
+ *              \
+ *               current pos
+ */
+cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_circle(float xi, float yi, float xe, float ye, float time);
+
+/* Goto xy circle order but in backward
+ * Arguments:
+ *  - xi: x coord of the intermediate point
+ *  - yi: y coord of the intermediate point
+ *  - xe: x coord of the ending point
+ *  - ye: y coord of the ending point
+ *  - time: Maximum allowed time in s for the order (or COCOBOT_TRAJECTORY_UNLIMITED_TIME for no timeout)
+ * Return:
+ *    An unique id for order identification
+ *
+ * Info:
+ *                _intermediate
+ *               /             \
+ *              /               ending point
+ *              |
+ *              \
+ *               current pos
+ */
+cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_circle_backward(float xi, float yi, float xe, float ye, float time);
+
 
 /* Block the task until all the orders has been processed or cocobot_trajectory_stop has been called 
  * Return:
