@@ -4,5 +4,7 @@
 #include <cocobot/position.h>
 #include <cocobot/console.h>
 #include <cocobot/lcd.h>
+#include <cocobot/trajectory.h>
+#include <cocobot/asserv.h>
 
 #endif// COCOBOT_H

@@ -1,10 +1,11 @@
-#ifndef cocobot_trajectory_H
-#define cocobot_trajectory_H
+#ifndef COCOBOT_TRAJECTORY_H
+#define COCOBOT_TRAJECTORY_H
 
 #define COCOBOT_TRAJECTORY_UNLIMITED_TIME (-1f)
+#define COCOBOT_TRAJECTORY_INVALID_HANDLE (-1)
 
 /* Type for storage of order unique handle */
-typedef uint32_t cocobot_trajectory_handle_t;
+typedef int32_t cocobot_trajectory_handle_t;
 
 /* Return values of cocobot_trajectory_wait and cocobot_trajectory_wait_until */
 typedef enum
@@ -15,8 +16,11 @@ typedef enum
 } cocobot_trajectory_result_t;
 
 
-/* Initialization of the trajectory module. Need to be called before any other action */
-void cocobot_trajectory_init(void);
+/* Initialization of the trajectory module. Need to be called before any other action 
+ * Argument:
+ *  - task_priority: FreeRTOS task priority for trajectory thread
+ */
+void cocobot_trajectory_init(unsigned int task_priority);
 
 
 /* Goto d order. 
@@ -110,7 +114,7 @@ cocobot_trajectory_result_t cocobot_trajectory_wait(void);
  * Return:
  *  cocobot_trajectory_result_t value
  */
-cocobot_trajectory_result_t cocobot_trajectory_wait(cocobot_trajectory_handle_t order);
+cocobot_trajectory_result_t cocobot_trajectory_wait_until(cocobot_trajectory_handle_t order);
 
 
 /* Stop all orders
@@ -126,4 +130,4 @@ void cocobot_trajectory_pause(void);
 void cocobot_trajectory_resume(void);
 
 
-#endif// cocobot_trajectory_H
+#endif// COCOBOT_TRAJECTORY_H
