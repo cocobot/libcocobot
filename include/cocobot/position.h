@@ -31,10 +31,4 @@ float cocobot_position_get_distance(void);
  */
 float cocobot_position_get_angle(void);
 
-/* Get the angle (modulo 360) value
- * Return
- *  Angle (modulo 360) of the robot in deg
- */
-float cocobot_position_get_angle_mod360(void);
-
 #endif// COCOBOT_POSITION_H
