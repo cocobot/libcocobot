@@ -15,10 +15,35 @@ void cocobot_asserv_init(void);
  */
 void cocobot_asserv_compute(void);
 
-
+/* Set the curvilinear distance set point
+ * Argument:
+ *  - distance: requested set point (mm)
+ */
 void cocobot_asserv_set_distance_set_point(float distance);
+
+/* Set the angular set point
+ * Argument:
+ *  - distance: requested set point (deg)
+ */
 void cocobot_asserv_set_angular_set_point(float angular);
 
+/* Enable/disable the asserv
+ * Argument:
+ *  - state: requested cocobot_asserv_state_t value (COCOBOT_ASSERV_DISABLE or COCOBOT_ASSERV_ENABLE)
+ */
 void cocobot_asserv_set_state(cocobot_asserv_state_t state);
+
+/* Handle console user command related to asserv module
+ * Argument:
+ *  - command: requested command
+ * Return:
+ *  0 : if command is not reconized
+ *  1 : if command has been successfully handled
+ */
+int cocobot_asserv_handle_console(char * command);
+
+/* Send asynchronously debug informations if user has requested them
+ */
+void cocobot_asserv_handle_async_console(void);
 
 #endif// COCOBOT_ASSERV_H

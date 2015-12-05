@@ -10,8 +10,6 @@ typedef struct
   float position_target;
   float position_current;
   float speed_target;
-
-  float output;
 } cocobot_asserv_ramp_t;
 
 
@@ -42,6 +40,22 @@ void cocobot_asserv_ramp_set_max_speed(cocobot_asserv_ramp_t * ramp, float max_s
  */
 void cocobot_asserv_ramp_set_max_accel(cocobot_asserv_ramp_t * ramp, float max_accel);
 
+/* Get the max speed for the trapeze speed generator
+ * Argument:
+ *  - ramp: a valid cocobot_asserv_ramp_t pointer
+ * Return:
+ *  maximum speed allowed
+ */
+float cocobot_asserv_ramp_get_max_speed(cocobot_asserv_ramp_t * ramp);
+
+/* Get the acceleration for the trapeze speed generator
+ * Argument:
+ *  - ramp: a valid cocobot_asserv_ramp_t pointer
+ * Return:
+ *  maximum acceleration allowed
+ */
+float cocobot_asserv_ramp_get_max_accel(cocobot_asserv_ramp_t * ramp);
+
 /* Run the computation
  * Argument:
  *  - ramp: a valid cocobot_asserv_ramp_t pointer
@@ -62,5 +76,21 @@ float cocobot_asserv_ramp_get_output(cocobot_asserv_ramp_t * ramp);
  *  - target: requested target
  */
 void cocobot_asserv_ramp_set_position_target(cocobot_asserv_ramp_t * ramp, float target);
+
+/* Get the ramp position target
+ * Argument:
+ *  - ramp: a valid cocobot_asserv_ramp_t pointer
+ * Return:
+ *  actual position target
+ */
+float cocobot_asserv_ramp_get_position_target(cocobot_asserv_ramp_t * ramp);
+
+/* Get the ramp speed target
+ * Argument:
+ *  - ramp: a valid cocobot_asserv_ramp_t pointer
+ * Return:
+ *  actual speed target
+ */
+float cocobot_asserv_ramp_get_speed_target(cocobot_asserv_ramp_t * ramp);
 
 #endif// COCOBOT_ASSERV_RAMP_H

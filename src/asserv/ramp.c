@@ -8,7 +8,6 @@ void cocobot_asserv_ramp_init(cocobot_asserv_ramp_t * ramp)
   ramp->position_target = 0;
   ramp->position_current = 0;
   ramp->speed_target = 0;
-  ramp->output = 0;
 }
 
 void cocobot_asserv_ramp_set_max_speed(cocobot_asserv_ramp_t * ramp, float max_speed)
@@ -16,9 +15,19 @@ void cocobot_asserv_ramp_set_max_speed(cocobot_asserv_ramp_t * ramp, float max_s
   ramp->max_speed = max_speed;
 }
 
+float cocobot_asserv_ramp_get_max_speed(cocobot_asserv_ramp_t * ramp)
+{
+  return ramp->max_speed;
+}
+
 void cocobot_asserv_ramp_set_max_accel(cocobot_asserv_ramp_t * ramp, float max_accel)
 {
   ramp->max_accel = max_accel;
+}
+
+float cocobot_asserv_ramp_get_max_accel(cocobot_asserv_ramp_t * ramp)
+{
+  return ramp->max_accel;
 }
 
 void cocobot_asserv_ramp_compute(cocobot_asserv_ramp_t * ramp)
@@ -72,7 +81,7 @@ void cocobot_asserv_ramp_compute(cocobot_asserv_ramp_t * ramp)
   }
 
   //compute next output
-  float output = ramp->output + ramp->speed_target;
+  float output = ramp->position_current + ramp->speed_target;
 
   //prevent position overshoot because of discrete speed
   if(ramp->speed_target > 0)
@@ -91,14 +100,13 @@ void cocobot_asserv_ramp_compute(cocobot_asserv_ramp_t * ramp)
   }
 
   //assign output
-  ramp->output = output;
+  ramp->position_current = output;
 }
 
 void cocobot_asserv_ramp_reset(cocobot_asserv_ramp_t * ramp, float current_position)
 {
   ramp->position_target = current_position;
   ramp->position_current = current_position;
-  ramp->output = current_position;
   ramp->speed_target = 0;
 }
 
@@ -107,7 +115,17 @@ void cocobot_asserv_ramp_set_position_target(cocobot_asserv_ramp_t * ramp, float
   ramp->position_target = target;
 }
 
+float cocobot_asserv_ramp_get_position_target(cocobot_asserv_ramp_t * ramp)
+{
+  return ramp->position_target;
+}
+
+float cocobot_asserv_ramp_get_speed_target(cocobot_asserv_ramp_t * ramp)
+{
+  return ramp->speed_target;
+}
+
 float cocobot_asserv_ramp_get_output(cocobot_asserv_ramp_t * ramp)
 {
-  return ramp->output;
+  return ramp->position_current;
 }

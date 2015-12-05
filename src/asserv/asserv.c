@@ -8,11 +8,22 @@ static cocobot_asserv_ramp_t _ramp_angu;
 static cocobot_asserv_pid_t _pid_dist;
 static cocobot_asserv_pid_t _pid_angu;
 
+static int _ramp_dist_debug;
+static int _ramp_angu_debug;
+static int _pid_dist_debug;
+static int _pid_angu_debug;
 static cocobot_asserv_state_t _state = COCOBOT_ASSERV_DISABLE;
 
 
 void cocobot_asserv_init(void)
 {
+  //no debug output if not requested
+  _pid_dist_debug = 0;
+  _pid_angu_debug = 0;
+  _ramp_dist_debug = 0;
+  _ramp_angu_debug = 0;
+
+  //asserv disabled until all is initialized
   cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
 
   //init ramps
@@ -83,4 +94,121 @@ void cocobot_asserv_set_angular_set_point(float angular)
 void cocobot_asserv_set_state(cocobot_asserv_state_t state)
 {
   _state = state;
+}
+
+int cocobot_asserv_handle_console(char * command)
+{
+  if(strcmp(command,"ramp_distance_speed") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_ramp_set_max_speed(&_ramp_dist, set);
+    }
+    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_speed(&_ramp_dist));
+    return 1;
+  }
+  if(strcmp(command,"ramp_distance_accel") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_ramp_set_max_accel(&_ramp_dist, set);
+    }
+    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_accel(&_ramp_dist));
+    return 1;
+  }
+  if(strcmp(command,"ramp_angular_speed") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_ramp_set_max_speed(&_ramp_angu, set);
+    }
+    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_speed(&_ramp_angu));
+    return 1;
+  }
+  if(strcmp(command,"ramp_angular_accel") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_ramp_set_max_accel(&_ramp_angu, set);
+    }
+    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_accel(&_ramp_angu));
+    return 1;
+  }
+  if(strcmp(command,"ramp_distance_debug") == 0)
+  {
+    cocobot_console_get_iargument(0, &_ramp_dist_debug);
+    cocobot_console_send_answer("%d", _ramp_dist_debug);
+    return 1;
+  }
+  if(strcmp(command,"ramp_angular_debug") == 0)
+  {
+    cocobot_console_get_iargument(0, &_ramp_angu_debug);
+    cocobot_console_send_answer("%d", _ramp_angu_debug);
+    return 1;
+  }
+  if(strcmp(command,"ramp_distance_debug") == 0)
+  {
+    cocobot_console_get_iargument(0, &_pid_dist_debug);
+    cocobot_console_send_answer("%d", _pid_dist_debug);
+    return 1;
+  }
+  if(strcmp(command,"ramp_angular_debug") == 0)
+  {
+    cocobot_console_get_iargument(0, &_pid_angu_debug);
+    cocobot_console_send_answer("%d", _pid_angu_debug);
+    return 1;
+  }
+
+
+
+
+  return 0;
+}
+
+void cocobot_asserv_handle_async_console(void)
+{
+  if(_ramp_dist_debug)
+  {
+    static int i = 0;
+    cocobot_console_send_asynchronous("ramp_distance", "%.3f,%.3f,%.3f,%.3f,%.3f",
+                                     cocobot_asserv_ramp_get_position_target(&_ramp_dist),
+                                     cocobot_position_get_distance(),
+                                     cocobot_asserv_ramp_get_output(&_ramp_dist),
+                                     cocobot_asserv_ramp_get_speed_target(&_ramp_dist),
+                                     cocobot_position_get_speed_distance()
+                                    );
+  }
+  if(_ramp_angu_debug)
+  {
+    static int i = 0;
+    cocobot_console_send_asynchronous("ramp_angular", "%.3f,%.3f,%.3f,%.3f,%.3f",
+                                     cocobot_asserv_ramp_get_position_target(&_ramp_angu),
+                                     cocobot_position_get_angle(),
+                                     cocobot_asserv_ramp_get_output(&_ramp_angu),
+                                     cocobot_asserv_ramp_get_speed_target(&_ramp_angu),
+                                     cocobot_position_get_speed_angle()
+                                    );
+  }
+  if(_pid_dist_debug)
+  {
+    static int i = 0;
+    cocobot_console_send_asynchronous("pid_distance", "%.3f,%.3f,%.3f",
+                                     cocobot_asserv_ramp_get_output(&_ramp_dist),
+                                     cocobot_position_get_distance(),
+                                     cocobot_asserv_pid_get_output(&_pid_dist),
+                                    );
+  }
+  if(_pid_angu_debug)
+  {
+    static int i = 0;
+    cocobot_console_send_asynchronous("pid_angu", "%.3f,%.3f,%.3f",
+                                     cocobot_asserv_ramp_get_output(&_ramp_angu),
+                                     cocobot_position_get_angle(),
+                                     cocobot_asserv_pid_get_output(&_pid_angu),
+                                    );
+  }
 }

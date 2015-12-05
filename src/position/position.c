@@ -18,8 +18,10 @@ static SemaphoreHandle_t mutex;
 static float _enc_x;
 static float _enc_y;
 static int32_t _enc_angle;
+static int32_t _enc_speed_angle;
 static int32_t _enc_angle_offset;
 static int32_t _enc_distance;
+static int32_t _enc_speed_distance;
 static int32_t _enc_value[2];
 static uint16_t _enc_last_angle[2];
 
@@ -75,7 +77,7 @@ static void cocobot_position_task(void * arg)
 
     //compute new curvilinear distance
     int32_t new_distance = _enc_value[0] + _enc_value[1];
-    int32_t delta_disance = new_distance - _enc_distance;
+    int32_t delta_distance = new_distance - _enc_distance;
 
     //compute new angle value
     int32_t new_angle = _enc_value[0] - _enc_value[1] + _enc_angle_offset; 
@@ -83,13 +85,15 @@ static void cocobot_position_task(void * arg)
 
     //compute X/Y coordonate
     float mid_angle = TICK2RAD(_enc_angle + delta_angle / 2);
-    float dx = delta_disance * cos(mid_angle);
-    float dy = delta_disance * sin(mid_angle);
+    float dx = delta_distance * cos(mid_angle);
+    float dy = delta_distance * sin(mid_angle);
     _enc_x += dx;
     _enc_y += dy;
 
     _enc_angle = new_angle;
     _enc_distance = new_distance;
+    _enc_speed_distance = delta_distance;
+    _enc_speed_angle = delta_angle;
 
 
     xSemaphoreGive(mutex);
@@ -148,3 +152,20 @@ float cocobot_position_get_angle(void)
   return a;
 }
 
+float cocobot_position_get_speed_distance(void)
+{
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  float d = TICK2MM(_enc_speed_distance);
+  xSemaphoreGive(mutex);
+
+  return d;
+}
+
+float cocobot_position_get_speed_angle(void)
+{
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  double a = TICK2DEG(_enc_speed_angle);
+  xSemaphoreGive(mutex);
+
+  return a;
+}

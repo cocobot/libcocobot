@@ -31,4 +31,17 @@ float cocobot_position_get_distance(void);
  */
 float cocobot_position_get_angle(void);
 
+/* Get the distance speed value
+ * Return:
+ *  Distance speed of the robot in mm / 10ms
+ */
+float cocobot_position_get_speed_distance(void);
+
+/* Get the anglar speed value
+ * Return
+ *  Absolute angular speed of the robot in deg / 10ms
+ */
+float cocobot_position_get_speed_angle(void);
+
+
 #endif// COCOBOT_POSITION_H

@@ -1,60 +1,99 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include <cocobot.h>
 #include <FreeRTOS.h>
 #include <task.h>
 
+//define protocol special characters
 #define COCOBOT_CONSOLE_ASYNCHRONOUS_START  "#"
 #define COCOBOT_CONSOLE_SYNCHRONOUS_START   "< "
 #define COCOBOT_CONSOLE_COMMAND_SEPARATOR   "="
-#define COCOBOT_CONSOLE_END_LINE            "\r\n"
+#define COCOBOT_CONSOLE_END_LINE            "\n"
 #define COCOBOT_CONSOLE_USER_INPUT_START    "> "
 #define COCOBOT_CONSOLE_BUFFER_LENGTH       255
 
-static mcual_usart_id_t usart;
-static char buffer[COCOBOT_CONSOLE_BUFFER_LENGTH];
-static unsigned int buffer_position;
-static cocobot_console_handler_t user_handler;
-static char * arguments;
+//useful macro for handling commmand
+#define TRY_HANDLER_IF_NEEDED(handled, cmd, f) do { handled = handled ? handled: f(cmd);} while(0)
+
+//internal parameters
+static mcual_usart_id_t _usart;
+static char _sync_buffer[COCOBOT_CONSOLE_BUFFER_LENGTH];
+static char _async_buffer[COCOBOT_CONSOLE_BUFFER_LENGTH];
+static unsigned int _buffer_position;
+static cocobot_console_handler_t _user_handler;
+static char * _arguments;
 
 static void cocobot_console_send_string(char * str)
 {
+  // /!\ str must be a valid NULL terminated string (otherwise -> infinite loop !)
+  
   while(*str != 0)
   {
-    mcual_usart_send(usart, *str);
-
+    mcual_usart_send(_usart, *str);
     str += 1;
   }
 }
 
-void cocobot_console_send_asynchronous(char * title, char * data)
+void cocobot_console_send_asynchronous(char * title, char * fmt, ...)
 {
+  //prevent other to use uart peripheral
+  xSemaphoreTake(_mutex, portMAX_DELAY);
+
+  //format output using vsnprintf. Be careful if using float, it may alloc some memory
+  va_list args;
+  va_start (args, fmt);
+  vsnprintf(_async_buffer, sizeof(_async_buffer), fmt, args); 
+  va_end (args);
+
+  //send the output to the serial line
   cocobot_console_send_string(COCOBOT_CONSOLE_ASYNCHRONOUS_START);
   cocobot_console_send_string(title);
   cocobot_console_send_string(COCOBOT_CONSOLE_COMMAND_SEPARATOR);
-  cocobot_console_send_string(data);
+  cocobot_console_send_string(async_buffer);
   cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
+
+  //release the lock
+  xSemaphoreGive(mutex);
 }
 
-int cocobot_console_handle_freertos(char * command, char * arguments)
+void cocobot_console_send_answer(char * fmt, ...)
 {
-  (void)arguments;
+  //prevent other to use uart peripheral
+  xSemaphoreTake(_mutex, portMAX_DELAY);
+
+  //format output using vsnprintf. Be careful if using float, it may alloc some memory
+  va_list args;
+  va_start (args, fmt);
+  vsnprintf(sync_buffer, sizeof(sync_buffer), fmt, args); 
+  va_end (args);
+
+  //send the output to the serial line
+  cocobot_console_send_string(sync_buffer);
+  cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
+
+  //release the lock
+  xSemaphoreGive(mutex);
+}
+
+int cocobot_console_handle_freertos(char * command)
+{
+  //list freertos task
   if(strcmp(command,"freertos") == 0)
   {
     TaskStatus_t tasks[10];
-    int tasks_num = 0; //uxTaskGetSystemState(tasks, 10, NULL);
+    int tasks_num = uxTaskGetSystemState(tasks, 10, NULL);
     int i;
     for(i = 0; i < tasks_num; i += 1)
     {
-      snprintf(buffer, sizeof(buffer), "%s,%lu,%lu,%lu,%d", 
+      cocobot_console_send_answer("%s,%lu,%lu,%lu,%d", 
                tasks[i].pcTaskName,
                (long unsigned int)tasks[i].uxCurrentPriority,
                (long unsigned int)tasks[i].uxBasePriority,
                tasks[i].ulRunTimeCounter,
                tasks[i].usStackHighWaterMark
                );
-      cocobot_console_send_string(buffer);
-      cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
     }
     return 1;
   }
@@ -62,33 +101,17 @@ int cocobot_console_handle_freertos(char * command, char * arguments)
   return 0;
 }
 
-int cocobot_console_get_iargument(int id)
+
+int cocobot_console_get_fargument(int id, float * out)
 {
   char * ptr = arguments;
   while(*ptr)
   {
     if(id == 0)
     {
-      int r = 0;
-      int sgn = 1;
-      while(*ptr)
-      {
-        if(*ptr == ' ')
-        {
-          break;
-        }
-        else if(*ptr == '-')
-        {
-          sgn = -1;
-        }
-        else if((*ptr >= '0') && (*ptr <= '9'))
-        {
-          r *= 10;
-          r += *ptr - '0';
-        }
-        ptr += 1;
-      }
-      return r * sgn;
+      //use strtof to convert to float without modifying the buffer
+      *out = strtof(ptr, NULL);
+      return 1;
     }
     if(*ptr == ' ')
     {
@@ -100,25 +123,51 @@ int cocobot_console_get_iargument(int id)
   return 0;
 }
 
-void cocobot_console_thread(void *arg)
+int cocobot_console_get_iargument(int id, int * i)
+{
+  float f;
+  //read float then convert it to integer (TODO: parse directly in integer)
+  int r = cocobot_console_get_fargument(id, &f);
+  *i = (int)f;
+  return r;
+}
+
+void cocobot_console_async_thread(void *arg)
+{
+  (void)arg;
+
+  TickType_t xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while(pdTRUE)
+  {
+    //send debug information if needed
+    cocobot_asserv_handle_async_console();
+
+    //wait 100ms (minus time used by previous handler)
+    vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
+  }
+}
+
+void cocobot_console_sync_thread(void *arg)
 {
   (void)arg;
   
+  //fresh console start
   cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
-  cocobot_console_send_asynchronous("console", "system started");
   cocobot_console_send_string(COCOBOT_CONSOLE_USER_INPUT_START);
+
   while(pdTRUE)
   {
     uint8_t recv = mcual_usart_recv(usart);
-    if(recv != '\n')
+    if(recv != '\r') //discard \r character
     {      
-
-      if(recv == '\r')
+      if(recv == '\n') //new command
       {
-        buffer[buffer_position] = 0;
+        sync_buffer[buffer_position] = 0;
 
-        char * cmd = buffer;
-        arguments = buffer;
+        //find arguments
+        char * cmd = sync_buffer;
+        arguments = sync_buffer;
         while(*arguments)
         {
           if(*arguments == ' ')
@@ -130,10 +179,16 @@ void cocobot_console_thread(void *arg)
           arguments += 1;
         }
 
-        cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
-
+        //try to parse the command with builtin command
         int handled = 0;
-        handled = cocobot_console_handle_freertos(cmd, arguments);
+        TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_console_handle_freertos);
+        TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_asserv_handle_console);
+
+        //try to parse the command with user defined callback
+        if(user_handler != NULL)
+        {
+          TRY_HANDLER_IF_NEEDED(handled, cmd, user_handler);
+        }
 
         if(!handled)
         {
@@ -142,34 +197,45 @@ void cocobot_console_thread(void *arg)
 
         if(!handled)
         {
+          //send error message (command not found)
+          xSemaphoreTake(mutex, portMAX_DELAY);
           cocobot_console_send_string("invalid command: '");
           cocobot_console_send_string(cmd);
           cocobot_console_send_string("'" COCOBOT_CONSOLE_END_LINE);
+          xSemaphoreGive(mutex);
         }
         buffer_position = 0;
 
+        xSemaphoreTake(mutex, portMAX_DELAY);
         cocobot_console_send_string(COCOBOT_CONSOLE_USER_INPUT_START);
+        xSemaphoreGive(mutex);
       }
       else
       {
         if(buffer_position < COCOBOT_CONSOLE_BUFFER_LENGTH - 1)
         {
-          buffer[buffer_position] = recv;
+          sync_buffer[buffer_position] = recv;
           buffer_position += 1;
         }
-        mcual_usart_send(usart, recv);
       }
     }
   }
 }
 
-void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority, cocobot_console_handler_t handler)
+void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, unsigned int priority_async, cocobot_console_handler_t handler)
 {
+  //internal storage initialization
   usart = usart_id;
   buffer_position = 0;
   user_handler = handler;
 
+  //create mutex
+  mutex = xSemaphoreCreateMutex();
+
+  //init usart peripheral
   mcual_usart_init(usart, 115200);
 
-  xTaskCreate(cocobot_console_thread, "console", 512, NULL, priority, NULL );
+  //start tasks
+  xTaskCreate(cocobot_console_sync_thread, "con. sync", 512, NULL, priority_monitor, NULL );
+  xTaskCreate(cocobot_console_async_thread, "con. async", 512, NULL, priority_async, NULL );
 }
