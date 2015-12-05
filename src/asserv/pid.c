@@ -95,7 +95,7 @@ void cocobot_asserv_pid_set_feedback(cocobot_asserv_pid_t * pid, float feedback)
   pid->feedback = feedback;
 }
 
-float cocobot_asserv_pid_get_ouput(cocobot_asserv_pid_t * pid)
+float cocobot_asserv_pid_get_output(cocobot_asserv_pid_t * pid)
 {
   return pid->output;
 }

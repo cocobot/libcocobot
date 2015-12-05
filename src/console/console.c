@@ -5,6 +5,7 @@
 #include <cocobot.h>
 #include <FreeRTOS.h>
 #include <task.h>
+#include <semphr.h>
 
 //define protocol special characters
 #define COCOBOT_CONSOLE_ASYNCHRONOUS_START  "#"
@@ -24,6 +25,7 @@ static char _async_buffer[COCOBOT_CONSOLE_BUFFER_LENGTH];
 static unsigned int _buffer_position;
 static cocobot_console_handler_t _user_handler;
 static char * _arguments;
+static SemaphoreHandle_t _mutex;
 
 static void cocobot_console_send_string(char * str)
 {
@@ -51,11 +53,11 @@ void cocobot_console_send_asynchronous(char * title, char * fmt, ...)
   cocobot_console_send_string(COCOBOT_CONSOLE_ASYNCHRONOUS_START);
   cocobot_console_send_string(title);
   cocobot_console_send_string(COCOBOT_CONSOLE_COMMAND_SEPARATOR);
-  cocobot_console_send_string(async_buffer);
+  cocobot_console_send_string(_async_buffer);
   cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
 
   //release the lock
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(_mutex);
 }
 
 void cocobot_console_send_answer(char * fmt, ...)
@@ -66,15 +68,15 @@ void cocobot_console_send_answer(char * fmt, ...)
   //format output using vsnprintf. Be careful if using float, it may alloc some memory
   va_list args;
   va_start (args, fmt);
-  vsnprintf(sync_buffer, sizeof(sync_buffer), fmt, args); 
+  vsnprintf(_sync_buffer, sizeof(_sync_buffer), fmt, args); 
   va_end (args);
 
   //send the output to the serial line
-  cocobot_console_send_string(sync_buffer);
+  cocobot_console_send_string(_sync_buffer);
   cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
 
   //release the lock
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(_mutex);
 }
 
 int cocobot_console_handle_freertos(char * command)
@@ -104,7 +106,7 @@ int cocobot_console_handle_freertos(char * command)
 
 int cocobot_console_get_fargument(int id, float * out)
 {
-  char * ptr = arguments;
+  char * ptr = _arguments;
   while(*ptr)
   {
     if(id == 0)
@@ -158,25 +160,25 @@ void cocobot_console_sync_thread(void *arg)
 
   while(pdTRUE)
   {
-    uint8_t recv = mcual_usart_recv(usart);
+    uint8_t recv = mcual_usart_recv(_usart);
     if(recv != '\r') //discard \r character
     {      
       if(recv == '\n') //new command
       {
-        sync_buffer[buffer_position] = 0;
+        _sync_buffer[_buffer_position] = 0;
 
         //find arguments
-        char * cmd = sync_buffer;
-        arguments = sync_buffer;
-        while(*arguments)
+        char * cmd = _sync_buffer;
+        _arguments = _sync_buffer;
+        while(*_arguments)
         {
-          if(*arguments == ' ')
+          if(*_arguments == ' ')
           {
-            *arguments = 0;
-            arguments += 1;
+            *_arguments = 0;
+            _arguments += 1;
             break;
           }
-          arguments += 1;
+          _arguments += 1;
         }
 
         //try to parse the command with builtin command
@@ -185,37 +187,32 @@ void cocobot_console_sync_thread(void *arg)
         TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_asserv_handle_console);
 
         //try to parse the command with user defined callback
-        if(user_handler != NULL)
+        if(_user_handler != NULL)
         {
-          TRY_HANDLER_IF_NEEDED(handled, cmd, user_handler);
-        }
-
-        if(!handled)
-        {
-          handled = user_handler(cmd);
+          TRY_HANDLER_IF_NEEDED(handled, cmd, _user_handler);
         }
 
         if(!handled)
         {
           //send error message (command not found)
-          xSemaphoreTake(mutex, portMAX_DELAY);
+          xSemaphoreTake(_mutex, portMAX_DELAY);
           cocobot_console_send_string("invalid command: '");
           cocobot_console_send_string(cmd);
           cocobot_console_send_string("'" COCOBOT_CONSOLE_END_LINE);
-          xSemaphoreGive(mutex);
+          xSemaphoreGive(_mutex);
         }
-        buffer_position = 0;
+        _buffer_position = 0;
 
-        xSemaphoreTake(mutex, portMAX_DELAY);
+        xSemaphoreTake(_mutex, portMAX_DELAY);
         cocobot_console_send_string(COCOBOT_CONSOLE_USER_INPUT_START);
-        xSemaphoreGive(mutex);
+        xSemaphoreGive(_mutex);
       }
       else
       {
-        if(buffer_position < COCOBOT_CONSOLE_BUFFER_LENGTH - 1)
+        if(_buffer_position < COCOBOT_CONSOLE_BUFFER_LENGTH - 1)
         {
-          sync_buffer[buffer_position] = recv;
-          buffer_position += 1;
+          _sync_buffer[_buffer_position] = recv;
+          _buffer_position += 1;
         }
       }
     }
@@ -225,15 +222,15 @@ void cocobot_console_sync_thread(void *arg)
 void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, unsigned int priority_async, cocobot_console_handler_t handler)
 {
   //internal storage initialization
-  usart = usart_id;
-  buffer_position = 0;
-  user_handler = handler;
+  _usart = usart_id;
+  _buffer_position = 0;
+  _user_handler = handler;
 
   //create mutex
-  mutex = xSemaphoreCreateMutex();
+  _mutex = xSemaphoreCreateMutex();
 
   //init usart peripheral
-  mcual_usart_init(usart, 115200);
+  mcual_usart_init(_usart, 115200);
 
   //start tasks
   xTaskCreate(cocobot_console_sync_thread, "con. sync", 512, NULL, priority_monitor, NULL );

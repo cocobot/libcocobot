@@ -105,7 +105,7 @@ int cocobot_asserv_handle_console(char * command)
     {
       cocobot_asserv_ramp_set_max_speed(&_ramp_dist, set);
     }
-    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_speed(&_ramp_dist));
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_ramp_get_max_speed(&_ramp_dist));
     return 1;
   }
   if(strcmp(command,"ramp_distance_accel") == 0)
@@ -115,7 +115,7 @@ int cocobot_asserv_handle_console(char * command)
     {
       cocobot_asserv_ramp_set_max_accel(&_ramp_dist, set);
     }
-    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_accel(&_ramp_dist));
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_ramp_get_max_accel(&_ramp_dist));
     return 1;
   }
   if(strcmp(command,"ramp_angular_speed") == 0)
@@ -125,7 +125,7 @@ int cocobot_asserv_handle_console(char * command)
     {
       cocobot_asserv_ramp_set_max_speed(&_ramp_angu, set);
     }
-    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_speed(&_ramp_angu));
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_ramp_get_max_speed(&_ramp_angu));
     return 1;
   }
   if(strcmp(command,"ramp_angular_accel") == 0)
@@ -135,7 +135,7 @@ int cocobot_asserv_handle_console(char * command)
     {
       cocobot_asserv_ramp_set_max_accel(&_ramp_angu, set);
     }
-    cocobot_console_send_answer("%.3f", cocobot_asserv_ramp_get_max_accel(&_ramp_angu));
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_ramp_get_max_accel(&_ramp_angu));
     return 1;
   }
   if(strcmp(command,"ramp_distance_debug") == 0)
@@ -173,42 +173,38 @@ void cocobot_asserv_handle_async_console(void)
 {
   if(_ramp_dist_debug)
   {
-    static int i = 0;
     cocobot_console_send_asynchronous("ramp_distance", "%.3f,%.3f,%.3f,%.3f,%.3f",
-                                     cocobot_asserv_ramp_get_position_target(&_ramp_dist),
-                                     cocobot_position_get_distance(),
-                                     cocobot_asserv_ramp_get_output(&_ramp_dist),
-                                     cocobot_asserv_ramp_get_speed_target(&_ramp_dist),
-                                     cocobot_position_get_speed_distance()
+                                     (double)cocobot_asserv_ramp_get_position_target(&_ramp_dist),
+                                     (double)cocobot_position_get_distance(),
+                                     (double)cocobot_asserv_ramp_get_output(&_ramp_dist),
+                                     (double)cocobot_asserv_ramp_get_speed_target(&_ramp_dist),
+                                     (double)cocobot_position_get_speed_distance()
                                     );
   }
   if(_ramp_angu_debug)
   {
-    static int i = 0;
     cocobot_console_send_asynchronous("ramp_angular", "%.3f,%.3f,%.3f,%.3f,%.3f",
-                                     cocobot_asserv_ramp_get_position_target(&_ramp_angu),
-                                     cocobot_position_get_angle(),
-                                     cocobot_asserv_ramp_get_output(&_ramp_angu),
-                                     cocobot_asserv_ramp_get_speed_target(&_ramp_angu),
-                                     cocobot_position_get_speed_angle()
+                                     (double)cocobot_asserv_ramp_get_position_target(&_ramp_angu),
+                                     (double)cocobot_position_get_angle(),
+                                     (double)cocobot_asserv_ramp_get_output(&_ramp_angu),
+                                     (double)cocobot_asserv_ramp_get_speed_target(&_ramp_angu),
+                                     (double)cocobot_position_get_speed_angle()
                                     );
   }
   if(_pid_dist_debug)
   {
-    static int i = 0;
     cocobot_console_send_asynchronous("pid_distance", "%.3f,%.3f,%.3f",
-                                     cocobot_asserv_ramp_get_output(&_ramp_dist),
-                                     cocobot_position_get_distance(),
-                                     cocobot_asserv_pid_get_output(&_pid_dist),
+                                     (double)cocobot_asserv_ramp_get_output(&_ramp_dist),
+                                     (double)cocobot_position_get_distance(),
+                                     (double)cocobot_asserv_pid_get_output(&_pid_dist)
                                     );
   }
   if(_pid_angu_debug)
   {
-    static int i = 0;
     cocobot_console_send_asynchronous("pid_angu", "%.3f,%.3f,%.3f",
-                                     cocobot_asserv_ramp_get_output(&_ramp_angu),
-                                     cocobot_position_get_angle(),
-                                     cocobot_asserv_pid_get_output(&_pid_angu),
+                                     (double)cocobot_asserv_ramp_get_output(&_ramp_angu),
+                                     (double)cocobot_position_get_angle(),
+                                     (double)cocobot_asserv_pid_get_output(&_pid_angu)
                                     );
   }
 }
