@@ -55,30 +55,34 @@ void cocobot_asserv_init(void)
 
 void cocobot_asserv_compute(void)
 {
- if(_state == COCOBOT_ASSERV_ENABLE)
- {
-   //compute ramps
-   cocobot_asserv_ramp_compute(&_ramp_dist); 
-   cocobot_asserv_ramp_compute(&_ramp_angu); 
+  if(_state == COCOBOT_ASSERV_ENABLE)
+  {
+    //compute ramps
+    cocobot_asserv_ramp_compute(&_ramp_dist);
+    cocobot_asserv_ramp_compute(&_ramp_angu);
 
-   //set PID inputs
-   cocobot_asserv_pid_set_input(&_pid_dist, cocobot_asserv_ramp_get_output(&_ramp_dist));
-   cocobot_asserv_pid_set_input(&_pid_angu, cocobot_asserv_ramp_get_output(&_ramp_angu));
-   cocobot_asserv_pid_set_feedback(&_pid_dist, cocobot_position_get_distance());
-   cocobot_asserv_pid_set_feedback(&_pid_angu, cocobot_position_get_angle());
+    //set PID inputs
+    cocobot_asserv_pid_set_input(&_pid_dist, cocobot_asserv_ramp_get_output(&_ramp_dist));
+    cocobot_asserv_pid_set_input(&_pid_angu, cocobot_asserv_ramp_get_output(&_ramp_angu));
+    cocobot_asserv_pid_set_feedback(&_pid_dist, cocobot_position_get_distance());
+    cocobot_asserv_pid_set_feedback(&_pid_angu, cocobot_position_get_angle());
 
-   //compute PIDs
-   cocobot_asserv_pid_compute(&_pid_dist);
-   cocobot_asserv_pid_compute(&_pid_angu);
- }
- else
- {
-   cocobot_asserv_ramp_reset(&_ramp_dist, cocobot_position_get_distance());
-   cocobot_asserv_ramp_reset(&_ramp_angu, cocobot_position_get_angle());
+    //compute PIDs
+    cocobot_asserv_pid_compute(&_pid_dist);
+    cocobot_asserv_pid_compute(&_pid_angu);
 
-   cocobot_asserv_pid_reset(&_pid_dist);
-   cocobot_asserv_pid_reset(&_pid_angu);
- }
+    //send PIDs output as command
+    cocobot_position_set_speed_distance_angle(cocobot_asserv_pid_get_output(&_pid_dist),
+                                              cocobot_asserv_pid_get_output(&_pid_angu));
+  }
+  else
+  {
+    cocobot_asserv_ramp_reset(&_ramp_dist, cocobot_position_get_distance());
+    cocobot_asserv_ramp_reset(&_ramp_angu, cocobot_position_get_angle());
+
+    cocobot_asserv_pid_reset(&_pid_dist);
+    cocobot_asserv_pid_reset(&_pid_angu);
+  }
 }
 
 void cocobot_asserv_set_distance_set_point(float distance)

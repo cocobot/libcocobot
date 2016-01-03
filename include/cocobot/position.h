@@ -43,5 +43,21 @@ float cocobot_position_get_speed_distance(void);
  */
 float cocobot_position_get_speed_angle(void);
 
+#ifdef AUSBEE_SIM
+/* Set the speed of virtual robot's motors
+ * Argument:
+ *  - left_motor_speed: VREP joint velocity for the left motor
+ *  - right_motor_speed: VREP joint velocity for the right motor
+ */
+void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed);
+
+/* Set the speed of the virtual robot's motors using distance and angle commmand
+ * Argument:
+ *  - linear_speed: command for the virtual robot linear speed
+ *  - angular_velocity: command for the virtual robot angular velocity
+ */
+void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity);
+#endif //AUSBEE_SIM
+
 
 #endif// COCOBOT_POSITION_H
