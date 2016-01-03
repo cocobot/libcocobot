@@ -7,8 +7,18 @@
 #include <stdio.h>
 #include "extApi.h"
 
+#define DEG2RAD(angle)  ((((float)angle) * M_PI) / ((float)180))
+
 int clientID=-1;
-int left_motor_handle, right_motor_handle;
+
+int   left_motor_handle=-1,         right_motor_handle=-1;
+float left_motor_position=0,        right_motor_position=0;
+float left_motor_prev_position=0,   right_motor_prev_position=0;
+
+float robot_x=0, robot_y=0;
+
+float robot_distance=0,     robot_angle=0;
+float robot_linear_speed=0, robot_angular_velocity=0;
 
 static void cocobot_position_task(void * arg)
 {
@@ -20,16 +30,28 @@ static void cocobot_position_task(void * arg)
   while(simxGetConnectionId(clientID)!=-1)
   {
     // update motors values
-    // TODO using Vrep functions
+    simxGetJointPosition(clientID, left_motor_handle, &left_motor_position, simx_opmode_buffer);
+    simxGetJointPosition(clientID, right_motor_handle, &right_motor_position, simx_opmode_buffer);
 
     //compute new curvilinear distance
-
+    float new_distance = left_motor_position + right_motor_position;
+    float delta_distance = new_distance - robot_distance;
 
     //compute new angle value
-
+    float new_angle = left_motor_position - right_motor_position;
+    float delta_angle = new_angle - robot_angle;
 
     //compute X/Y coordonate
+    float mid_angle = DEG2RAD(robot_angle + delta_angle / 2);
+    float dx = delta_distance * cos(mid_angle);
+    float dy = delta_distance * sin(mid_angle);
+    robot_x += dx;
+    robot_y += dy;
 
+    robot_angle = new_angle;
+    robot_distance = new_distance;
+    robot_linear_speed = delta_distance;
+    robot_angular_velocity = delta_angle;
 
     //run the asserv
     cocobot_asserv_compute();
@@ -57,11 +79,19 @@ void cocobot_position_init(unsigned int task_priority)
     {
       printf("Error %d during remote function call. Could not get object cocobotLeftMotor#\n", ret);
     }
+    else
+    {
+      simxGetJointPosition(clientID, left_motor_handle, &left_motor_position, simx_opmode_streaming);
+    }
 
     ret = simxGetObjectHandle(clientID, "cocobotRightMotor#", &right_motor_handle, simx_opmode_oneshot_wait);
     if (ret != 0)
     {
       printf("Error %d during remote function call. Could not get object cocobotRightMotor#\n", ret);
+    }
+    else
+    {
+      simxGetJointPosition(clientID, right_motor_handle, &right_motor_position, simx_opmode_streaming);
     }
 
     // Start task
@@ -75,32 +105,32 @@ void cocobot_position_init(unsigned int task_priority)
 
 float cocobot_position_get_x(void)
 {
-  //return x;
+  return robot_x;
 }
 
 float cocobot_position_get_y(void)
 {
-  //return y;
+  return robot_y;
 }
 
 float cocobot_position_get_distance(void)
 {
-  //return d;
+  return robot_distance;
 }
 
 float cocobot_position_get_angle(void)
 {
-  //return a;
+  return robot_angle;
 }
 
 float cocobot_position_get_speed_distance(void)
 {
-  //return d;
+  return robot_linear_speed;
 }
 
 float cocobot_position_get_speed_angle(void)
 {
-  //return a;
+  return robot_angular_velocity;
 }
 
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
