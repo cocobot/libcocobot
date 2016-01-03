@@ -143,7 +143,7 @@ void cocobot_trajectory_task(void * arg)
       if(status == COCOBOT_TRAJECTORY_ORDER_DONE)
       {
         xSemaphoreTake(mutex, portMAX_DELAY);
-        order_list_read = order_list_read % TRAJECTORY_MAX_ORDER;
+        order_list_read = (order_list_read + 1) % TRAJECTORY_MAX_ORDER;
         xSemaphoreGive(mutex);
       }
     }
