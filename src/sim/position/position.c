@@ -27,40 +27,48 @@ static void cocobot_position_task(void * arg)
 
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
-  while(simxGetConnectionId(clientID)!=-1)
+  while(1)
   {
-    // update motors values
-    simxGetJointPosition(clientID, left_motor_handle, &left_motor_position, simx_opmode_buffer);
-    simxGetJointPosition(clientID, right_motor_handle, &right_motor_position, simx_opmode_buffer);
+    if (simxGetConnectionId(clientID)!=-1)
+    {
+      // update motors values
+      simxGetJointPosition(clientID, left_motor_handle, &left_motor_position, simx_opmode_buffer);
+      simxGetJointPosition(clientID, right_motor_handle, &right_motor_position, simx_opmode_buffer);
 
-    //compute new curvilinear distance
-    float new_distance = left_motor_position + right_motor_position;
-    float delta_distance = new_distance - robot_distance;
+      //compute new curvilinear distance
+      float new_distance = left_motor_position + right_motor_position;
+      float delta_distance = new_distance - robot_distance;
 
-    //compute new angle value
-    float new_angle = left_motor_position - right_motor_position;
-    float delta_angle = new_angle - robot_angle;
+      //compute new angle value
+      float new_angle = left_motor_position - right_motor_position;
+      float delta_angle = new_angle - robot_angle;
 
-    //compute X/Y coordonate
-    float mid_angle = DEG2RAD(robot_angle + delta_angle / 2);
-    float dx = delta_distance * cos(mid_angle);
-    float dy = delta_distance * sin(mid_angle);
-    robot_x += dx;
-    robot_y += dy;
+      //compute X/Y coordonate
+      float mid_angle = DEG2RAD(robot_angle + delta_angle / 2);
+      float dx = delta_distance * cos(mid_angle);
+      float dy = delta_distance * sin(mid_angle);
+      robot_x += dx;
+      robot_y += dy;
 
-    robot_angle = new_angle;
-    robot_distance = new_distance;
-    robot_linear_speed = delta_distance;
-    robot_angular_velocity = delta_angle;
+      robot_angle = new_angle;
+      robot_distance = new_distance;
+      robot_linear_speed = delta_distance;
+      robot_angular_velocity = delta_angle;
 
-    //run the asserv
-    cocobot_asserv_compute();
+      //run the asserv
+      cocobot_asserv_compute();
 
-    //wait 10ms
-    vTaskDelayUntil( &xLastWakeTime, 10 / portTICK_PERIOD_MS);
+      //wait 10ms
+      vTaskDelayUntil( &xLastWakeTime, 10 / portTICK_PERIOD_MS);
+    }
+    else
+    {
+      printf("cocobot_position_task: Connection with VREP remote API server lost\n");
+      //wait 1s
+      vTaskDelayUntil( &xLastWakeTime, 1000 / portTICK_PERIOD_MS);
+    }
   }
 
-  printf("cocobot_position_task: Connection with VREP remote API server lost\n");
 }
 
 
