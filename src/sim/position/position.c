@@ -107,13 +107,20 @@ static void * cocobot_position_vrep(void * args)
     {
       printf("Error %d during remote function call. Could not get object cocobotLeftMotor#\n", ret);
     }
+    else
+    {
+      simxGetJointPosition(clientID, left_motor_handle, &buffer_from_vrep_unsync.left_motor_position, simx_opmode_streaming);
+    }
 
     ret = simxGetObjectHandle(clientID, "cocobotRightMotor#", &right_motor_handle, simx_opmode_oneshot_wait);
     if (ret != 0)
     {
       printf("Error %d during remote function call. Could not get object cocobotRightMotor#\n", ret);
     }
-
+    else
+    {
+      simxGetJointPosition(clientID, right_motor_handle, &buffer_from_vrep_unsync.right_motor_position, simx_opmode_streaming);
+    }
 
     while (simxGetConnectionId(clientID)!=-1)
     {
