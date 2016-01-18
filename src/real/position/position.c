@@ -3,8 +3,11 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#include <platform.h>
 #include "generated/autoconf.h"
+
+#ifndef AUSBEE_SIM
+#include <cocobot/encoders.h>
+#endif //AUSBEE_SIM
 
 //useful macros
 #define TICK2RAD(tick)  ((((float)tick) * M_PI) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
@@ -22,65 +25,30 @@ static int32_t _enc_speed_angle;
 static int32_t _enc_angle_offset;
 static int32_t _enc_distance;
 static int32_t _enc_speed_distance;
-static int32_t _enc_value[2];
-static uint16_t _enc_last_angle[2];
-
-static void cocobot_position_encoder_update(int id)
-{
-  uint16_t raw;
-
-  if(id == 0)
-  {
-    platform_spi_position_select(PLATFORM_SPI_ENCR_SELECT);
-  }
-  else
-  {
-    platform_spi_position_select(PLATFORM_SPI_ENCL_SELECT);
-  }
-
-  raw = platform_spi_position_transfert(0xff) & 0xFF;
-  raw |= (platform_spi_position_transfert(0xff) << 8) & 0xFF00;
-
-  platform_spi_position_select(PLATFORM_SPI_CS_UNSELECT);
-  
-  //swap octets + delete MSB
-  raw = ((raw & 0xff) << 8) | (raw >> 8);
-  raw <<= 1;
-
-  //compute new angle by abusing 16 bits integer overflow
-  int16_t delta = raw - _enc_last_angle[id];
-  _enc_last_angle[id] = raw;
-  if(id == 0)
-  {
-    _enc_value[id] += delta;
-  }
-  else
-  {
-    _enc_value[id] -= delta;
-  }
-}
 
 static void cocobot_position_task(void * arg)
 {
   //arg is always NULL. Prevent "variable unused" warning
   (void)arg;
+  int32_t motor_position[2] = {0, 0}; // {left, right}
 
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while(1)
   {
     //update encoder values
-    cocobot_position_encoder_update(0);
-    cocobot_position_encoder_update(1);
+#ifndef AUSBEE_SIM
+    cocobot_encoders_get_motor_position(motor_position);
+#endif //AUSBEE_SIM
 
     xSemaphoreTake(mutex, portMAX_DELAY);
 
     //compute new curvilinear distance
-    int32_t new_distance = _enc_value[0] + _enc_value[1];
+    int32_t new_distance = motor_position[0] + motor_position[1];
     int32_t delta_distance = new_distance - _enc_distance;
 
     //compute new angle value
-    int32_t new_angle = _enc_value[0] - _enc_value[1] + _enc_angle_offset; 
+    int32_t new_angle = motor_position[0] - motor_position[1] + _enc_angle_offset;
     int32_t delta_angle = new_angle - _enc_angle;
 
     //compute X/Y coordonate

@@ -2,7 +2,6 @@
 #include <math.h>
 #include <FreeRTOS.h>
 #include <task.h>
-#include <platform.h>
 #include "generated/autoconf.h"
 
 #ifdef AUSBEE_SIM
