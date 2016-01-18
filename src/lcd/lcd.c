@@ -193,15 +193,15 @@ void cocobot_lcd_print(int xpos, int ypos, const char * fmt, ...)
     }
 
     //process character columns and rows
-    for (int i = 0; i < 5; i++) 
+    for (int i = 0; i < 5; i++)
     {
       uint8_t b = Font5x7[(*buffer - 32) * 5 + i];
-      for (uint8_t j = 0; j < 7; j++) 
+      for (uint8_t j = 0; j < 7; j++)
       {
-        if (b & (1 << j)) 
+        if (b & (1 << j))
         {
           cocobot_lcd_pixel(xpos + i, ypos + j, 1);
-        } 
+        }
         else
         {
           cocobot_lcd_pixel(xpos + i, ypos + j, 0);

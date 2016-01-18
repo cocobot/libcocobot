@@ -30,7 +30,7 @@ static SemaphoreHandle_t _mutex;
 static void cocobot_console_send_string(char * str)
 {
   // /!\ str must be a valid NULL terminated string (otherwise -> infinite loop !)
-  
+
   while(*str != 0)
   {
     mcual_usart_send(_usart, *str);
@@ -46,7 +46,7 @@ void cocobot_console_send_asynchronous(char * title, char * fmt, ...)
   //format output using vsnprintf. Be careful if using float, it may alloc some memory
   va_list args;
   va_start (args, fmt);
-  vsnprintf(_async_buffer, sizeof(_async_buffer), fmt, args); 
+  vsnprintf(_async_buffer, sizeof(_async_buffer), fmt, args);
   va_end (args);
 
   //send the output to the serial line
@@ -68,7 +68,7 @@ void cocobot_console_send_answer(char * fmt, ...)
   //format output using vsnprintf. Be careful if using float, it may alloc some memory
   va_list args;
   va_start (args, fmt);
-  vsnprintf(_sync_buffer, sizeof(_sync_buffer), fmt, args); 
+  vsnprintf(_sync_buffer, sizeof(_sync_buffer), fmt, args);
   va_end (args);
 
   //send the output to the serial line
@@ -89,7 +89,7 @@ int cocobot_console_handle_freertos(char * command)
     int i;
     for(i = 0; i < tasks_num; i += 1)
     {
-      cocobot_console_send_answer("%s,%lu,%lu,%lu,%d", 
+      cocobot_console_send_answer("%s,%lu,%lu,%lu,%d",
                tasks[i].pcTaskName,
                (long unsigned int)tasks[i].uxCurrentPriority,
                (long unsigned int)tasks[i].uxBasePriority,
@@ -153,7 +153,7 @@ void cocobot_console_async_thread(void *arg)
 void cocobot_console_sync_thread(void *arg)
 {
   (void)arg;
-  
+
   //fresh console start
   cocobot_console_send_string(COCOBOT_CONSOLE_END_LINE);
   cocobot_console_send_string(COCOBOT_CONSOLE_USER_INPUT_START);
@@ -162,7 +162,7 @@ void cocobot_console_sync_thread(void *arg)
   {
     uint8_t recv = mcual_usart_recv(_usart);
     if(recv != '\r') //discard \r character
-    {      
+    {
       if(recv == '\n') //new command
       {
         _sync_buffer[_buffer_position] = 0;

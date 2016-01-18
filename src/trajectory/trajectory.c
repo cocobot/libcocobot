@@ -30,7 +30,7 @@ typedef struct
   float time;
   union
   {
-    struct 
+    struct
     {
       float distance;
     } d_order;
