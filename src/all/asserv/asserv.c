@@ -14,7 +14,6 @@ static int _pid_dist_debug;
 static int _pid_angu_debug;
 static cocobot_asserv_state_t _state = COCOBOT_ASSERV_DISABLE;
 
-
 void cocobot_asserv_init(void)
 {
   //no debug output if not requested

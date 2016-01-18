@@ -137,3 +137,14 @@ float cocobot_position_get_speed_angle(void)
 
   return a;
 }
+
+void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
+{
+  (void)left_motor_speed;
+  (void)right_motor_speed;
+}
+
+void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)
+{
+  cocobot_position_set_motor_command(linear_speed+angular_velocity, linear_speed-angular_velocity);
+}

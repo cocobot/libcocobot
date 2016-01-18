@@ -36,7 +36,7 @@ void cocobot_asserv_ramp_compute(cocobot_asserv_ramp_t * ramp)
   float delta_position = ramp->speed_target * ramp->speed_target / (2 * ramp->max_accel);
 
   //check if we want to move forward or backward
-  float err = ramp->position_target - ramp->position_current; 
+  float err = ramp->position_target - ramp->position_current;
   if(err > 0)
   {
     //forward
