@@ -28,11 +28,7 @@ static void cocobot_position_task(void * arg)
 {
   //arg is always NULL. Prevent "variable unused" warning
   (void)arg;
-#ifdef AUSBEE_SIM
-  float motor_position[2] = {0, 0}; // {left, right}
-#else
   int32_t motor_position[2] = {0, 0}; // {left, right}
-#endif //AUSBEE_SIM
 
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();

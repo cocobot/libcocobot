@@ -109,7 +109,7 @@ void cocobot_vrep_init(void)
   }
 }
 
-void cocobot_vrep_get_motor_position(float motor_position[2])
+void cocobot_vrep_get_motor_position(int32_t motor_position[2])
 {
   cocobot_from_vrep_t buffer_from_vrep_sync;
 
@@ -119,8 +119,8 @@ void cocobot_vrep_get_motor_position(float motor_position[2])
 
   if(buffer_from_vrep_sync.initialized)
   {
-    motor_position[0] = buffer_from_vrep_sync.left_motor_position;
-    motor_position[1] = buffer_from_vrep_sync.right_motor_position;
+    motor_position[0] = (int32_t)buffer_from_vrep_sync.left_motor_position;
+    motor_position[1] = (int32_t)buffer_from_vrep_sync.right_motor_position;
   }
 }
 

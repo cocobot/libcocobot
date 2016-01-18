@@ -1,6 +1,8 @@
 #ifndef COCOBOT_VREP_H
 #define COCOBOT_VREP_H
 
+#include <stdint.h>
+
 /* Initialization of vrep communication module. Has to be called before any other action
  */
 void cocobot_vrep_init(void);
@@ -11,7 +13,7 @@ void cocobot_vrep_init(void);
  *     motor_position[0] corresponds to the left motor and
  *     motor_position[1] corresponds to the right motor
  */
-void cocobot_vrep_get_motor_position(float motor_position[2]);
+void cocobot_vrep_get_motor_position(int32_t motor_position[2]);
 
 /* Set the speed of virtual robot's motors
  * Argument:
