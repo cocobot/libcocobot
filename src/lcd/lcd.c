@@ -113,10 +113,10 @@ static const char Font5x7[] = {
 static void cocobot_lcd_send_command(uint8_t data)
 {
   //set command output
-  platform_gpio_clear(PLATFORM_GPIO_ALARM3);
+  platform_gpio_clear(PLATFORM_GPIO_ALARM0);
 
   //send data (SPI)
-  platform_spi_slave_select(PLATFORM_SPI_CS4_SELECT);
+  platform_spi_slave_select(PLATFORM_SPI_CS0_SELECT);
   platform_spi_slave_transfert(data);
   platform_spi_slave_select(PLATFORM_SPI_CS_UNSELECT);
 }
@@ -128,8 +128,8 @@ void cocobot_lcd_render(void)
   cocobot_lcd_send_command(0x40);
 
   //send the whole framebuffer to lcd (SPI)
-  platform_gpio_set(PLATFORM_GPIO_ALARM3);
-  platform_spi_slave_select(PLATFORM_SPI_CS4_SELECT);
+  platform_gpio_set(PLATFORM_GPIO_ALARM0);
+  platform_spi_slave_select(PLATFORM_SPI_CS0_SELECT);
   for(unsigned int i = 0; i < sizeof(framebuffer); i += 1)
   {
     platform_spi_slave_transfert(framebuffer[i]);
@@ -255,7 +255,7 @@ void cocobot_lcd_draw_line(int x0, int y0, int x1, int y1)
 void cocobot_lcd_init(void)
 {
   //use alarm as LCD DATA/COMMAND pin
-  platform_gpio_set_direction(PLATFORM_GPIO_ALARM3, MCUAL_GPIO_OUTPUT);
+  platform_gpio_set_direction(PLATFORM_GPIO_ALARM0, MCUAL_GPIO_OUTPUT);
 
   //initialize LCD
   cocobot_lcd_send_command(0x21);
