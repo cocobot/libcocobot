@@ -7,6 +7,10 @@ typedef enum
   COCOBOT_STRATEGY_OFFENSIVE,
 } cocobot_strategy_t;
 
+/* Init scheduler and game's state
+ */
+void cocobot_action_scheduler_init(void);
+
 /* Set the strategy used by the scheduler when evaluating actions value
  * (default is COCOBOT_STRATEGY_DEFENSIVE)
  * Argument:
@@ -30,7 +34,8 @@ void * cocobot_action_scheduler_add_action(unsigned int score, float x, float y,
  * Argument:
  *  - action_id: id of the action to evaluate (see cocobot_action_scheduler_add_action)
  * Return:
- *  The action's value (bigger is better)
+ *  The action's value (bigger is better). If negative, action can't be done
+ *  in time.
  */
 float cocobot_action_scheduler_eval(void * action_id);
 
