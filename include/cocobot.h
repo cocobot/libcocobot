@@ -6,5 +6,6 @@
 #include <cocobot/lcd.h>
 #include <cocobot/trajectory.h>
 #include <cocobot/asserv.h>
+#include <cocobot/action_scheduler.h>
 
 #endif// COCOBOT_H
