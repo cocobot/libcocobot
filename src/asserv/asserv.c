@@ -1,4 +1,5 @@
 #include <cocobot.h>
+#include <platform.h>
 #include "cocobot/asserv_ramp.h"
 #include "cocobot/asserv_pid.h"
 #include "generated/autoconf.h"
@@ -73,6 +74,9 @@ void cocobot_asserv_compute(void)
     //send PIDs output as command
     cocobot_position_set_speed_distance_angle(cocobot_asserv_pid_get_output(&_pid_dist),
                                               cocobot_asserv_pid_get_output(&_pid_angu));
+    
+    //enable motors
+    platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
   }
   else
   {
@@ -81,6 +85,10 @@ void cocobot_asserv_compute(void)
 
     cocobot_asserv_pid_reset(&_pid_dist);
     cocobot_asserv_pid_reset(&_pid_angu);
+
+    //disable motors
+    cocobot_position_set_speed_distance_angle(0, 0);
+    platform_gpio_clear(PLATFORM_GPIO_MOTOR_ENABLE);
   }
 }
 

@@ -1,4 +1,5 @@
 #include <cocobot.h>
+#include <platform.h>
 #include <math.h>
 #include <FreeRTOS.h>
 #include <task.h>
@@ -23,47 +24,52 @@ static SemaphoreHandle_t mutex;
 static float robot_x=0, robot_y=0;
 static int32_t robot_distance=0,     robot_angle=0, robot_angle_offset=0;
 static int32_t robot_linear_speed=0, robot_angular_velocity=0;
+int32_t motor_position[2] = {0, 0}; // {left, right}
+
+static void cocobot_position_compute(void)
+{
+  //update encoder values
+#ifdef AUSBEE_SIM
+  cocobot_vrep_get_motor_position(motor_position);
+#else
+  cocobot_encoders_get_motor_position(motor_position);
+#endif //AUSBEE_SIM
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+
+  //compute new curvilinear distance
+  int32_t new_distance = (int32_t)motor_position[0] + (int32_t)motor_position[1];
+  int32_t delta_distance = new_distance - robot_distance;
+
+  //compute new angle value
+  int32_t new_angle = (int32_t)motor_position[0] - (int32_t)motor_position[1] + robot_angle_offset;
+  int32_t delta_angle = new_angle - robot_angle;
+
+  //compute X/Y coordonate
+  float mid_angle = TICK2RAD(robot_angle + delta_angle / 2);
+  float dx = delta_distance * cos(mid_angle);
+  float dy = delta_distance * sin(mid_angle);
+  robot_x += dx;
+  robot_y += dy;
+
+  robot_angle = new_angle;
+  robot_distance = new_distance;
+  robot_linear_speed = delta_distance;
+  robot_angular_velocity = delta_angle;
+
+  xSemaphoreGive(mutex);
+}
 
 static void cocobot_position_task(void * arg)
 {
   //arg is always NULL. Prevent "variable unused" warning
   (void)arg;
-  int32_t motor_position[2] = {0, 0}; // {left, right}
 
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while(1)
   {
-    //update encoder values
-#ifdef AUSBEE_SIM
-    cocobot_vrep_get_motor_position(motor_position);
-#else
-    cocobot_encoders_get_motor_position(motor_position);
-#endif //AUSBEE_SIM
-
-    xSemaphoreTake(mutex, portMAX_DELAY);
-
-    //compute new curvilinear distance
-    int32_t new_distance = (int32_t)motor_position[0] + (int32_t)motor_position[1];
-    int32_t delta_distance = new_distance - robot_distance;
-
-    //compute new angle value
-    int32_t new_angle = (int32_t)motor_position[0] - (int32_t)motor_position[1] + robot_angle_offset;
-    int32_t delta_angle = new_angle - robot_angle;
-
-    //compute X/Y coordonate
-    float mid_angle = TICK2RAD(robot_angle + delta_angle / 2);
-    float dx = delta_distance * cos(mid_angle);
-    float dy = delta_distance * sin(mid_angle);
-    robot_x += dx;
-    robot_y += dy;
-
-    robot_angle = new_angle;
-    robot_distance = new_distance;
-    robot_linear_speed = delta_distance;
-    robot_angular_velocity = delta_angle;
-
-    xSemaphoreGive(mutex);
+    cocobot_position_compute();
 
     //run the asserv
     cocobot_asserv_compute();
@@ -82,6 +88,11 @@ void cocobot_position_init(unsigned int task_priority)
 #ifdef AUSBEE_SIM
   cocobot_vrep_init();
 #endif //AUSBEE_SIM
+
+  //Be sure that position manager have valid values before continuing the initialization process.
+  //Need to run twice in order to intialize speed values
+  cocobot_position_compute();
+  cocobot_position_compute();
 
   //Start task
   xTaskCreate(cocobot_position_task, "position", 200, NULL, task_priority, NULL);
@@ -146,12 +157,47 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 #ifdef AUSBEE_SIM
   cocobot_vrep_set_motor_command(left_motor_speed, right_motor_speed);
 #else
-  (void)left_motor_speed;
-  (void)right_motor_speed;
+  if(left_motor_speed > 0xffff)
+  {
+    left_motor_speed = 0xffff;
+  }
+  if(left_motor_speed < -0xffff)
+  {
+    left_motor_speed = 0xffff;
+  }
+  if(right_motor_speed > 0xffff)
+  {
+    right_motor_speed = 0xffff;
+  }
+  if(right_motor_speed < -0xffff)
+  {
+    right_motor_speed = 0xffff;
+  }
+
+  if(left_motor_speed >= 0)
+  {
+    platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_LEFT);
+    platform_motor_set_left_duty_cycle(left_motor_speed);
+  }
+  else
+  {
+    platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_LEFT);
+    platform_motor_set_left_duty_cycle(-left_motor_speed);
+  }
+  if(right_motor_speed >= 0)
+  {
+    platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
+    platform_motor_set_right_duty_cycle(right_motor_speed);
+  }
+  else
+  {
+    platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
+    platform_motor_set_right_duty_cycle(-right_motor_speed);
+  }
 #endif //AUSBEE_SIM
 }
 
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)
 {
-  cocobot_position_set_motor_command(linear_speed+angular_velocity, linear_speed-angular_velocity);
+  cocobot_position_set_motor_command(linear_speed-angular_velocity, linear_speed+angular_velocity);
 }

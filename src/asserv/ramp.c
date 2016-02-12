@@ -1,3 +1,4 @@
+#include <cocobot.h>
 #include "cocobot/asserv_ramp.h"
 
 void cocobot_asserv_ramp_init(cocobot_asserv_ramp_t * ramp)
@@ -84,18 +85,20 @@ void cocobot_asserv_ramp_compute(cocobot_asserv_ramp_t * ramp)
   float output = ramp->position_current + ramp->speed_target;
 
   //prevent position overshoot because of discrete speed
-  if(ramp->speed_target > 0)
+  if((err > 0) && (ramp->speed_target > 0))
   {
     if(output > ramp->position_target)
     {
       output = ramp->position_target;
+      ramp->speed_target = 0;
     }
   }
-  else if(ramp->speed_target < 0)
+  else if((err < 0) && (ramp->speed_target < 0))
   {
     if(output < ramp->position_target)
     {
       output = ramp->position_target;
+      ramp->speed_target = 0;
     }
   }
 
