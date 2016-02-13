@@ -13,6 +13,7 @@ typedef enum
   COCOBOT_TRAJECTORY_SUCCESS,             /* Orders have been proccessed without error */
   COCOBOT_TRAJECTORY_STOPPED_BEFORE_END,  /* cocobot_trajectory_stop has been called before the end of the order list */
   COCOBOT_TRAJECTORY_TIMEOUT_BEFORE_END,  /* One (or more) order has timouted before reaching the target */
+  COCOBOT_TRAJECTORY_RUNNING,
 } cocobot_trajectory_result_t;
 
 

@@ -78,15 +78,78 @@ static SemaphoreHandle_t mutex;
 //handle generator internal counter
 static cocobot_trajectory_handle_t last_handle;
 
+//handle end of trajectory point list
+static volatile cocobot_trajectory_result_t result;
+
+static float cocobot_trajectory_find_best_angle(cocobot_trajectory_order_t * order, float angle)
+{
+  //get modulo multiplier
+  float abase = floorf(order->start.angle / 360.0f) * 360.0f;
+
+  //set set point in valid range (-180 > 180)
+  while(angle > 180.0f) {
+    angle -= 360.0f;
+  }
+  while(angle < -180.0f) {
+    angle += 360.0f;
+  }
+
+  //find best target
+  float t1 = abase + angle;
+  float t2 = abase + angle + 360.0f;
+  float t3 = abase + angle - 360.0f;
+  float t4 = abase + angle - 2 * 360.0f;
+
+  float dt1 = fabsf(t1 - order->start.angle);
+  float dt2 = fabsf(t2 - order->start.angle);
+  float dt3 = fabsf(t3 - order->start.angle);
+  float dt4 = fabsf(t4 - order->start.angle);
+
+  float target = t1;
+  float dtarget = dt1;
+  if(dt2 < dtarget)
+  {
+    target = t2;
+    dtarget = dt2;
+  }
+  if(dt3 < dtarget)
+  {
+    target = t3;
+    dtarget = dt3;
+  }
+  if(dt4 < dtarget)
+  {
+    target = t4;
+    dtarget = dt4;
+  }
+
+  return target;
+}
+
 static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_d(cocobot_trajectory_order_t * order)
 {
   float l = fabsf(order->start.distance + order->d_order.distance - cocobot_position_get_distance());
-  if(l < 3.0)
+  if(l < 3.0f)
   {
     return COCOBOT_TRAJECTORY_ORDER_DONE;
   }
 
   cocobot_asserv_set_distance_set_point(order->start.distance + order->d_order.distance);
+
+  return COCOBOT_TRAJECTORY_ORDER_IN_PROGRESS;
+}
+
+static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_a(cocobot_trajectory_order_t * order)
+{
+  float target = cocobot_trajectory_find_best_angle(order, order->a_order.angle);
+
+  float l = fabsf(target - cocobot_position_get_angle());
+  if(l < 2.5f)
+  {
+    return COCOBOT_TRAJECTORY_ORDER_DONE;;
+  }
+
+  cocobot_asserv_set_angular_set_point(target);
 
   return COCOBOT_TRAJECTORY_ORDER_IN_PROGRESS;
 }
@@ -132,6 +195,10 @@ void cocobot_trajectory_task(void * arg)
           status = cocobot_trajectory_handle_type_d(order);
           break;
 
+        case COCOBOT_TRAJECTORY_GOTO_A:
+          status = cocobot_trajectory_handle_type_a(order);
+          break;
+
         default:
           //something is broken, signal to user and try next order
           cocobot_console_send_asynchronous("trajectory", "Unknown order type");
@@ -146,6 +213,10 @@ void cocobot_trajectory_task(void * arg)
         order_list_read = (order_list_read + 1) % TRAJECTORY_MAX_ORDER;
         xSemaphoreGive(mutex);
       }
+    }
+    else if(result == COCOBOT_TRAJECTORY_RUNNING)
+    {
+      result = COCOBOT_TRAJECTORY_SUCCESS;
     }
 
     //wait 100ms
@@ -174,6 +245,7 @@ void cocobot_add_new_order(cocobot_trajectory_order_t * order)
 {
   //reset initialized flag
   order->initialized = 0;
+  result = COCOBOT_TRAJECTORY_RUNNING;
 
   xSemaphoreTake(mutex, portMAX_DELAY);
 
@@ -296,4 +368,11 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_circle_backward(float xi,
 
   //return the handle
   return order.handle;
+}
+
+cocobot_trajectory_result_t cocobot_trajectory_wait(void)
+{
+  while(result == COCOBOT_TRAJECTORY_RUNNING);
+
+  return result;
 }
