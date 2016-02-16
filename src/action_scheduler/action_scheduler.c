@@ -45,6 +45,16 @@ void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat)
   current_game_state.strat = strat;
 }
 
+static void cocobot_action_scheduler_update_game_state(void)
+{
+  // TODO: Update remaining time
+  //current_game_state.remaining_time = ;
+
+  current_game_state.robot_pos.x = cocobot_position_get_x();
+  current_game_state.robot_pos.y = cocobot_position_get_y();
+  current_game_state.robot_pos.a = cocobot_position_get_angle();
+}
+
 void * cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float risk)
 {
   action_list[action_list_end].score = score;
@@ -70,6 +80,8 @@ void * cocobot_action_scheduler_add_action(unsigned int score, float x, float y,
 float cocobot_action_scheduler_eval(void * action_id)
 {
   cocobot_action_t *action = (cocobot_action_t *)action_id;
+
+  cocobot_action_scheduler_update_game_state();
 
   if (action->execution_time > current_game_state.remaining_time)
   {
