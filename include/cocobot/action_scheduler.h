@@ -7,6 +7,12 @@ typedef enum
   COCOBOT_STRATEGY_OFFENSIVE,
 } cocobot_strategy_t;
 
+// Should never return 0 (reserved).
+// Should return a stricly positive value if execution was done correctly.
+// Should return a stricly negative value when action could not be fully
+// executed and should be done later.
+typedef int (*action_callback)(void);
+
 /* Init scheduler and game's state
  */
 void cocobot_action_scheduler_init(void);
@@ -24,20 +30,17 @@ void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat);
  *  - x, y, a:        position (mm) and angle (deg), relatively to the table, to start the action
  *  - execution_time: time needed to guarantee the action's full execution
  *  - success_proba:  probability that the action succeed when doing it (between 0 and 1)
- * Return:
- *  A unique ID for the new action
+ *  - callback:       funtion to call when action should be executed
  */
-void * cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float risk);
+void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float risk, action_callback callback);
 
-/* Compute action's value based on current game's state (selected strategy,
+/* Execute best remaining action based on game's state (selected strategy,
  * remaining time, distance, obstacles, ...)
- * Argument:
- *  - action_id: id of the action to evaluate (see cocobot_action_scheduler_add_action)
  * Return:
- *  The action's value (bigger is better). If negative, action can't be done
- *  in time.
+ *  - 0 if no action could be executed with current game's state
+ *  - else action's callback return value (negative value for error during
+ *  action's execution)
  */
-float cocobot_action_scheduler_eval(void * action_id);
-
+int cocobot_action_scheduler_execute_best_action(void);
 
 #endif // COCOBOT_ACTION_SCHEDULER_H
