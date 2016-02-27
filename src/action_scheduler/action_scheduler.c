@@ -1,7 +1,10 @@
 #include <cocobot.h>
 #include <stdio.h>
+#include <math.h>
 
 #define SCHEDULER_MAX_ACTIONS 16
+
+#define EUCLIDEAN_DISTANCE(x, y) (sqrt((x)*(x) + (y)*(y)))
 
 typedef struct
 {
@@ -14,7 +17,7 @@ typedef struct
   unsigned int    score;
   cocobot_pos_t   pos;
   float           execution_time;
-  float           risk;
+  float           success_proba;
   action_callback callback;
   uint8_t         done;
 } cocobot_action_t;
@@ -26,6 +29,7 @@ static struct cocobot_game_state_t
 {
   cocobot_strategy_t  strat;
   cocobot_pos_t       robot_pos;
+  float               robot_average_linear_speed; // in m/s (or mm/ms)
   float               remaining_time; // in ms
 } current_game_state;
 
@@ -36,6 +40,7 @@ void cocobot_action_scheduler_init(void)
   current_game_state.robot_pos.x = 0;
   current_game_state.robot_pos.y = 0;
   current_game_state.robot_pos.a = 0;
+  current_game_state.robot_average_linear_speed = 0;
   current_game_state.remaining_time = 90000;
 
   action_list_end = 0;
@@ -44,6 +49,11 @@ void cocobot_action_scheduler_init(void)
 void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat)
 {
   current_game_state.strat = strat;
+}
+
+void cocobot_action_scheduler_set_average_linear_speed(float speed)
+{
+  current_game_state.robot_average_linear_speed = speed;
 }
 
 static void cocobot_action_scheduler_update_game_state(void)
@@ -56,14 +66,14 @@ static void cocobot_action_scheduler_update_game_state(void)
   current_game_state.robot_pos.a = cocobot_position_get_angle();
 }
 
-void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float risk, action_callback callback)
+void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback)
 {
   action_list[action_list_end].score = score;
   action_list[action_list_end].pos.x = x;
   action_list[action_list_end].pos.y = y;
   action_list[action_list_end].pos.a = a;
   action_list[action_list_end].execution_time = execution_time;
-  action_list[action_list_end].risk = risk;
+  action_list[action_list_end].success_proba = success_proba;
   action_list[action_list_end].callback = callback;
   action_list[action_list_end].done = 0;
 
@@ -77,6 +87,28 @@ void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, f
   }
 }
 
+/* Returns the approximate time (in ms) needed by the robot to reach the action's
+ * starting point, based on the average robot linear speed set by the user.
+ * By default, this time is set to 0 ms.
+ * TODO: this function should be replaced by a more precise time given by the
+ * pathfinder.
+ */
+static float cocobot_action_scheduler_time_to_reach(cocobot_action_t * action)
+{
+  if (current_game_state.robot_average_linear_speed == 0)
+  {
+    return 0;
+  }
+
+  float x = current_game_state.robot_pos.x - action->pos.x;
+  float y = current_game_state.robot_pos.y - action->pos.y;
+  // 2 is a factor to approximate the length of the real path from the
+  // straight-line distance between the two points
+  float approximate_linear_distance = 2 * EUCLIDEAN_DISTANCE(x, y);
+
+  return (approximate_linear_distance)/(current_game_state.robot_average_linear_speed);
+}
+
 /* Compute action's value based on current game's state
  * Argument:
  *  - action_id: id of the action to evaluate (see cocobot_action_scheduler_add_action)
@@ -84,10 +116,8 @@ void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, f
  *  The action's value (bigger is better). If negative, action can't be done
  *  in time or as already been done.
  */
-static float cocobot_action_scheduler_eval(void * action_id)
+static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 {
-  cocobot_action_t *action = (cocobot_action_t *)action_id;
-
   cocobot_action_scheduler_update_game_state();
 
   if (action->execution_time > current_game_state.remaining_time)
@@ -99,9 +129,11 @@ static float cocobot_action_scheduler_eval(void * action_id)
     return -0.5f;
   }
 
-  // TODO: Set evaluation formula based on strategy, time, distance, ...
+  // TODO: Take strategy and remaining time to execute other actions into account
+  float potential_elementary_value = action->score / (action->execution_time + cocobot_action_scheduler_time_to_reach(action));
+  float effective_elementary_value = action->success_proba * potential_elementary_value;
 
-  return 0;
+  return effective_elementary_value;
 }
 
 int cocobot_action_scheduler_execute_best_action(void)
