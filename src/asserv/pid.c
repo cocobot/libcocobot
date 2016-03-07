@@ -15,6 +15,10 @@ void cocobot_asserv_pid_init(cocobot_asserv_pid_t * pid)
 
   pid->last_error = 0;
   pid->integral = 0;
+
+  pid->p_contrib = 0;
+  pid->d_contrib = 0;
+  pid->i_contrib = 0;
 }
 
 void cocobot_asserv_pid_set_kp(cocobot_asserv_pid_t * pid, float kp)
@@ -40,6 +44,31 @@ void cocobot_asserv_pid_set_max_integral(cocobot_asserv_pid_t * pid, float max_i
 void cocobot_asserv_pid_set_max_error_for_integration(cocobot_asserv_pid_t * pid, float max_error_for_integration)
 {
   pid->max_error_for_integration = max_error_for_integration;
+}
+
+float cocobot_asserv_pid_get_kp(cocobot_asserv_pid_t * pid)
+{
+  return pid->kp;
+}
+
+float cocobot_asserv_pid_get_kd(cocobot_asserv_pid_t * pid)
+{
+  return pid->kd;
+}
+
+float cocobot_asserv_pid_get_ki(cocobot_asserv_pid_t * pid)
+{
+  return pid->ki;
+}
+
+float cocobot_asserv_pid_get_max_integral(cocobot_asserv_pid_t * pid)
+{
+  return pid->max_integral;
+}
+
+float cocobot_asserv_pid_get_max_error_for_integration(cocobot_asserv_pid_t * pid)
+{
+  return pid->max_error_for_integration;
 }
 
 void cocobot_asserv_pid_reset(cocobot_asserv_pid_t * pid)
@@ -82,6 +111,10 @@ void cocobot_asserv_pid_compute(cocobot_asserv_pid_t * pid)
   }
   float i = pid->integral * pid->ki;
 
+  pid->p_contrib = p;
+  pid->d_contrib = d;
+  pid->i_contrib = i;
+
   pid->output = p + d + i;
 }
 
@@ -99,3 +132,19 @@ float cocobot_asserv_pid_get_output(cocobot_asserv_pid_t * pid)
 {
   return pid->output;
 }
+
+float cocobot_asserv_pid_get_p_contribution(cocobot_asserv_pid_t * pid)
+{
+  return pid->p_contrib;
+}
+
+float cocobot_asserv_pid_get_i_contribution(cocobot_asserv_pid_t * pid)
+{
+  return pid->i_contrib;
+}
+
+float cocobot_asserv_pid_get_d_contribution(cocobot_asserv_pid_t * pid)
+{
+  return pid->d_contrib;
+}
+

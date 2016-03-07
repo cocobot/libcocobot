@@ -12,7 +12,7 @@
 #define COCOBOT_CONSOLE_SYNCHRONOUS_START   "< "
 #define COCOBOT_CONSOLE_COMMAND_SEPARATOR   "="
 #define COCOBOT_CONSOLE_END_LINE            "\n"
-#define COCOBOT_CONSOLE_USER_INPUT_START    "> "
+#define COCOBOT_CONSOLE_USER_INPUT_START    ">"
 #define COCOBOT_CONSOLE_BUFFER_LENGTH       255
 
 //useful macro for handling commmand
@@ -130,7 +130,9 @@ int cocobot_console_get_iargument(int id, int * i)
   float f;
   //read float then convert it to integer (TODO: parse directly in integer)
   int r = cocobot_console_get_fargument(id, &f);
-  *i = (int)f;
+  if(r) {
+    *i = (int)f;
+  }
   return r;
 }
 
