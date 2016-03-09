@@ -7,5 +7,6 @@
 #include <cocobot/trajectory.h>
 #include <cocobot/asserv.h>
 #include <cocobot/action_scheduler.h>
+#include <cocobot/traj_generator.h>
 
 #endif// COCOBOT_H
