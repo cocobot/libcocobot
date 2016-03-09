@@ -129,6 +129,58 @@ int cocobot_asserv_handle_console(char * command)
     cocobot_console_send_answer("%.3f", (double)cocobot_asserv_ramp_get_max_accel(&_ramp_dist));
     return 1;
   }
+  if(strcmp(command,"pid_distance_kp") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_kp(&_pid_dist, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_kp(&_pid_dist));
+    return 1;
+  }
+  if(strcmp(command,"pid_distance_kd") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_ki(&_pid_dist, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_kd(&_pid_dist));
+    return 1;
+  }
+  if(strcmp(command,"pid_distance_ki") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_ki(&_pid_dist, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_ki(&_pid_dist));
+    return 1;
+  }
+  if(strcmp(command,"pid_distance_max_i") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_max_integral(&_pid_dist, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_max_integral(&_pid_dist));
+    return 1;
+  }
+  if(strcmp(command,"pid_distance_max_e") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_max_error_for_integration(&_pid_dist, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_max_error_for_integration(&_pid_dist));
+    return 1;
+  }
+
+
   if(strcmp(command,"ramp_angular_speed") == 0)
   {
     float set;
@@ -149,6 +201,59 @@ int cocobot_asserv_handle_console(char * command)
     cocobot_console_send_answer("%.3f", (double)cocobot_asserv_ramp_get_max_accel(&_ramp_angu));
     return 1;
   }
+  if(strcmp(command,"pid_angular_kp") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_kp(&_pid_angu, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_kp(&_pid_angu));
+    return 1;
+  }
+  if(strcmp(command,"pid_angular_kd") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_ki(&_pid_angu, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_kd(&_pid_angu));
+    return 1;
+  }
+  if(strcmp(command,"pid_angular_ki") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_ki(&_pid_angu, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_ki(&_pid_angu));
+    return 1;
+  }
+  if(strcmp(command,"pid_angular_max_i") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_max_integral(&_pid_angu, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_max_integral(&_pid_angu));
+    return 1;
+  }
+  if(strcmp(command,"pid_angular_max_e") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      cocobot_asserv_pid_set_max_error_for_integration(&_pid_angu, set);
+    }
+    cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_max_error_for_integration(&_pid_angu));
+    return 1;
+  }
+
+
+
   if(strcmp(command,"ramp_distance_debug") == 0)
   {
     cocobot_console_get_iargument(0, &_ramp_dist_debug);
@@ -161,21 +266,18 @@ int cocobot_asserv_handle_console(char * command)
     cocobot_console_send_answer("%d", _ramp_angu_debug);
     return 1;
   }
-  if(strcmp(command,"ramp_distance_debug") == 0)
+  if(strcmp(command,"pid_distance_debug") == 0)
   {
     cocobot_console_get_iargument(0, &_pid_dist_debug);
     cocobot_console_send_answer("%d", _pid_dist_debug);
     return 1;
   }
-  if(strcmp(command,"ramp_angular_debug") == 0)
+  if(strcmp(command,"pid_angular_debug") == 0)
   {
     cocobot_console_get_iargument(0, &_pid_angu_debug);
     cocobot_console_send_answer("%d", _pid_angu_debug);
     return 1;
   }
-
-
-
 
   return 0;
 }
@@ -204,18 +306,20 @@ void cocobot_asserv_handle_async_console(void)
   }
   if(_pid_dist_debug)
   {
-    cocobot_console_send_asynchronous("pid_distance", "%.3f,%.3f,%.3f",
-                                     (double)cocobot_asserv_ramp_get_output(&_ramp_dist),
-                                     (double)cocobot_position_get_distance(),
-                                     (double)cocobot_asserv_pid_get_output(&_pid_dist)
+    cocobot_console_send_asynchronous("pid_distance", "%.3f,%.3f,%.3f,%.3f",
+                                     (double)cocobot_asserv_pid_get_output(&_pid_dist),
+                                     (double)cocobot_asserv_pid_get_p_contribution(&_pid_dist),
+                                     (double)cocobot_asserv_pid_get_i_contribution(&_pid_dist),
+                                     (double)cocobot_asserv_pid_get_d_contribution(&_pid_dist)
                                     );
   }
   if(_pid_angu_debug)
   {
-    cocobot_console_send_asynchronous("pid_angu", "%.3f,%.3f,%.3f",
-                                     (double)cocobot_asserv_ramp_get_output(&_ramp_angu),
-                                     (double)cocobot_position_get_angle(),
-                                     (double)cocobot_asserv_pid_get_output(&_pid_angu)
+    cocobot_console_send_asynchronous("pid_angular", "%.3f,%.3f,%.3f,%.3f",
+                                     (double)cocobot_asserv_pid_get_output(&_pid_angu),
+                                     (double)cocobot_asserv_pid_get_p_contribution(&_pid_angu),
+                                     (double)cocobot_asserv_pid_get_i_contribution(&_pid_angu),
+                                     (double)cocobot_asserv_pid_get_d_contribution(&_pid_angu)
                                     );
   }
 }

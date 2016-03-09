@@ -199,5 +199,25 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)
 {
-  cocobot_position_set_motor_command(linear_speed-angular_velocity, linear_speed+angular_velocity);
+  float c1 = linear_speed + angular_velocity;
+  float c2 = linear_speed - angular_velocity;
+
+  float k1 = 1;
+  float k2 = 1;
+
+  if(fabsf(c1) > 0xFFFF)
+  {
+    k1 = ((float)0xFFFF) / fabsf(c1);
+  }
+  if(fabsf(c2) > 0xFFFF)
+  {
+    k2 = ((float)0xFFFF) / fabsf(c2);
+  }
+
+  if(k2 < k1)
+  {
+    k1 = k2;
+  }
+
+  cocobot_position_set_motor_command(k1 * (linear_speed-angular_velocity), k1 * (linear_speed+angular_velocity));
 }

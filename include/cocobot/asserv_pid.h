@@ -8,6 +8,10 @@ typedef struct
   float kd;
   float ki;
 
+  float p_contrib;
+  float d_contrib;
+  float i_contrib;
+
   float max_integral;
   float max_error_for_integration;
 
@@ -39,12 +43,28 @@ void cocobot_asserv_pid_reset(cocobot_asserv_pid_t * pid);
  */
 void cocobot_asserv_pid_set_kp(cocobot_asserv_pid_t * pid, float kp);
 
+/* Get the proportionnal coef
+ * Argument:
+ *  - pid: a valid cocobot_asserv_pid_t pointer
+ * Return:
+ *  - the coef
+ */
+float cocobot_asserv_pid_get_kp(cocobot_asserv_pid_t * pid);
+
 /* Set the derivate coef
  * Argument:
  *  - pid: a valid cocobot_asserv_pid_t pointer
  *  - kd: coef
  */
 void cocobot_asserv_pid_set_kd(cocobot_asserv_pid_t * pid, float kd);
+
+/* Get the derivate coef
+ * Argument:
+ *  - pid: a valid cocobot_asserv_pid_t pointer
+ * Return:
+ *  - the coef
+ */
+float cocobot_asserv_pid_get_kd(cocobot_asserv_pid_t * pid);
 
 /* Set the integral coef
  * Argument:
@@ -53,12 +73,37 @@ void cocobot_asserv_pid_set_kd(cocobot_asserv_pid_t * pid, float kd);
  */
 void cocobot_asserv_pid_set_ki(cocobot_asserv_pid_t * pid, float ki);
 
+/* Get the integral coef
+ * Argument:
+ *  - pid: a valid cocobot_asserv_pid_t pointer
+ * Return:
+ *  - the coef
+ */
+float cocobot_asserv_pid_get_ki(cocobot_asserv_pid_t * pid);
+
+/* Get the integral saturation value
+ * Argument:
+ *  - pid: a valid cocobot_asserv_pid_t pointer
+ * Return:
+ *  - the value
+ */
+float cocobot_asserv_pid_get_max_integral(cocobot_asserv_pid_t * pid);
+
 /* Set the integral saturation value
  * Argument:
  *  - pid: a valid cocobot_asserv_pid_t pointer
  *  - max_integral: maximal integral value allowed
  */
 void cocobot_asserv_pid_set_max_integral(cocobot_asserv_pid_t * pid, float max_integral);
+
+/* Get the maximal error value before integral is disabled and resetted
+ * Argument:
+ *  - pid: a valid cocobot_asserv_pid_t pointer
+ * Return:
+ *  - the value
+ */
+float cocobot_asserv_pid_get_max_error_for_integration(cocobot_asserv_pid_t * pid);
+
 
 /* Set the maximal error value before integral is disabled and resetted
  * Argument:
@@ -94,6 +139,10 @@ float cocobot_asserv_pid_get_output(cocobot_asserv_pid_t * pid);
  *  - pid: a valid cocobot_asserv_pid_t pointer
  */
 void cocobot_asserv_pid_compute(cocobot_asserv_pid_t * pid);
+
+float cocobot_asserv_pid_get_p_contribution(cocobot_asserv_pid_t * pid);
+float cocobot_asserv_pid_get_i_contribution(cocobot_asserv_pid_t * pid);
+float cocobot_asserv_pid_get_d_contribution(cocobot_asserv_pid_t * pid);
 
 #endif// COCOBOT_ASSERV_PID_H
 
