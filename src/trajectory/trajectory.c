@@ -65,12 +65,27 @@ typedef struct
     float y;
   }start;
 
+  struct
+  {
+    float x;
+    float y;
+    float angle;
+  }estimated_start;
+
+  struct
+  {
+    float x;
+    float y;
+    float angle;
+  }estimated_end;
+
 } cocobot_trajectory_order_t;
 
 //create an list of order (implemented by a circular buffer of struct cocobot_trajectory_order_t)
 static cocobot_trajectory_order_t order_list[TRAJECTORY_MAX_ORDER];
 static unsigned int order_list_write;
 static unsigned int order_list_read;
+static int estimations_need_recompute;
 
 //mutex for order_list access
 static SemaphoreHandle_t mutex;
@@ -154,6 +169,83 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_a(cocobo
   return COCOBOT_TRAJECTORY_ORDER_IN_PROGRESS;
 }
 
+static void cocobot_trajectory_compute_estimations(void)
+{
+  cocobot_trajectory_order_t * last_order = NULL;
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  int opost = order_list_read;
+
+  while(1)
+  {
+    cocobot_trajectory_order_t * order = NULL;
+
+    if(opost != order_list_write)
+    {
+      order = &order_list[opost];
+    }
+
+    if(order == NULL)
+    {
+      break;
+    }
+
+    if(last_order == NULL)
+    {
+      order->estimated_start.x = cocobot_position_get_x();
+      order->estimated_start.y = cocobot_position_get_y();
+      order->estimated_start.angle = cocobot_position_get_angle();
+    }
+    else
+    {
+      order->estimated_start.x = last_order->estimated_end.x;
+      order->estimated_start.y = last_order->estimated_end.y;
+      order->estimated_start.angle = last_order->estimated_end.angle;
+    }
+
+    switch(order->type)
+    {
+      case COCOBOT_TRAJECTORY_GOTO_D:
+        order->estimated_end.x = order->estimated_start.x + order->d_order.distance * cos(order->estimated_start.angle * M_PI / 180.0);
+        order->estimated_end.y = order->estimated_start.y + order->d_order.distance * sin(order->estimated_start.angle * M_PI / 180.0);
+        order->estimated_end.angle = order->estimated_start.angle;
+        break;
+
+      case COCOBOT_TRAJECTORY_GOTO_A:
+        order->estimated_end.x = order->estimated_start.x;
+        order->estimated_end.y = order->estimated_start.y;
+        order->estimated_end.angle = order->a_order.angle;
+        break;
+
+      case COCOBOT_TRAJECTORY_GOTO_XY:
+        order->estimated_end.x = order->xy_order.x;
+        order->estimated_end.y = order->xy_order.y;
+        order->estimated_end.angle = atan2(order->estimated_end.y - order->estimated_start.y, order->estimated_end.y - order->estimated_start.x) * 180.0 / M_PI;
+        break;
+
+      case COCOBOT_TRAJECTORY_GOTO_XY_BACKWARD:
+        order->estimated_end.x = order->xy_order.x;
+        order->estimated_end.y = order->xy_order.y;
+        order->estimated_end.angle = atan2(order->estimated_end.y - order->estimated_start.y, order->estimated_end.y - order->estimated_start.x) * 180.0 / M_PI + 180.0;
+        break;
+
+
+
+      default:
+        order->estimated_end.x = order->estimated_start.x;
+        order->estimated_end.y = order->estimated_start.y;
+        order->estimated_end.angle = order->estimated_start.angle;
+        break;
+    }
+
+
+    last_order = order;
+    opost = (opost + 1) % TRAJECTORY_MAX_ORDER;
+  }
+
+  xSemaphoreGive(mutex);
+}
+
 void cocobot_trajectory_task(void * arg)
 {
   //arg is always NULL. Prevent "variable unused" warning
@@ -163,8 +255,14 @@ void cocobot_trajectory_task(void * arg)
   xLastWakeTime = xTaskGetTickCount();
   while(1)
   {
-    cocobot_trajectory_order_t * order = NULL;
+    if(estimations_need_recompute)
+    {
+      cocobot_trajectory_compute_estimations();
+      estimations_need_recompute = 0;
+    }
 
+    cocobot_trajectory_order_t * order = NULL;
+  
     //get current order
     xSemaphoreTake(mutex, portMAX_DELAY);
     if(order_list_read != order_list_write)
@@ -230,6 +328,7 @@ void cocobot_trajectory_init(unsigned int task_priority)
   //reset order_list circular buffer
   order_list_write = 0;
   order_list_read = 0;
+  estimations_need_recompute = 0;
 
   //create mutex
   mutex = xSemaphoreCreateMutex();
@@ -245,6 +344,12 @@ void cocobot_add_new_order(cocobot_trajectory_order_t * order)
 {
   //reset initialized flag
   order->initialized = 0;
+  order->estimated_start.x = NAN;
+  order->estimated_start.y = NAN;
+  order->estimated_start.angle = NAN;
+  order->estimated_end.x = NAN;
+  order->estimated_end.y = NAN;
+  order->estimated_end.angle = NAN;
   result = COCOBOT_TRAJECTORY_RUNNING;
 
   xSemaphoreTake(mutex, portMAX_DELAY);
@@ -262,6 +367,7 @@ void cocobot_add_new_order(cocobot_trajectory_order_t * order)
 
   last_handle += 1;
   order->handle = last_handle;
+  estimations_need_recompute = 1;
 
   xSemaphoreGive(mutex);
 }
@@ -375,4 +481,52 @@ cocobot_trajectory_result_t cocobot_trajectory_wait(void)
   while(result == COCOBOT_TRAJECTORY_RUNNING);
 
   return result;
+}
+
+int cocobot_trajectory_handle_console(char * command)
+{
+  if(strcmp(command,"trajectory_list") == 0)
+  {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    int opost = order_list_read;
+    xSemaphoreGive(mutex);
+    while(1)
+    {
+      cocobot_trajectory_order_t * order = NULL;
+
+      xSemaphoreTake(mutex, portMAX_DELAY);
+      if(opost != order_list_write)
+      {
+        order = &order_list[opost];
+      }
+      xSemaphoreGive(mutex);
+
+      if(order == NULL)
+      {
+        break;
+      }
+
+      switch(order->type)
+      {
+        case COCOBOT_TRAJECTORY_GOTO_D:
+          cocobot_console_send_answer("D,%d,%.3f,%.3f", 0, (double)order->time, (double)order->d_order.distance);
+          break;
+
+        case COCOBOT_TRAJECTORY_GOTO_A:
+          cocobot_console_send_answer("A,%d,%.3f,%.3f", 0, (double)order->time, (double)order->a_order.angle);
+          break;
+
+        default:
+          cocobot_console_send_answer("?");
+          break;
+      }
+      cocobot_console_send_answer("%.3f,%.3f,%.3f", (double)order->estimated_start.x, (double)order->estimated_start.y, (double)order->estimated_start.angle);
+      cocobot_console_send_answer("%.3f,%.3f,%.3f", (double)order->estimated_end.x, (double)order->estimated_end.y, (double)order->estimated_end.angle);
+
+      opost = (opost + 1) % TRAJECTORY_MAX_ORDER;
+    }
+    return 1;
+  }
+
+  return 0;
 }

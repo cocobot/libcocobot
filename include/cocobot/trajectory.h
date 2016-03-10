@@ -131,4 +131,13 @@ void cocobot_trajectory_pause(void);
 void cocobot_trajectory_resume(void);
 
 
+/* Handle console user command related to trajectory module
+ * Argument:
+ *  - command: requested command
+ * Return:
+ *  0 : if command is not reconized
+ *  1 : if command has been successfully handled
+ */
+int cocobot_trajectory_handle_console(char * command);
+
 #endif// COCOBOT_TRAJECTORY_H
