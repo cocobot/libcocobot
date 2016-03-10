@@ -7,6 +7,7 @@
 #include "generated/autoconf.h"
 
 #ifdef AUSBEE_SIM
+#include <stdlib.h>
 #include <cocobot/vrep.h>
 #else
 #include <cocobot/encoders.h>
@@ -25,12 +26,19 @@ static float robot_x=0, robot_y=0;
 static int32_t robot_distance=0,     robot_angle=0, robot_angle_offset=0;
 static int32_t robot_linear_speed=0, robot_angular_velocity=0;
 int32_t motor_position[2] = {0, 0}; // {left, right}
+static int position_debug = 0;
+#ifdef AUSBEE_SIM
+int fake_vrep = 0;
+#endif
 
 static void cocobot_position_compute(void)
 {
   //update encoder values
 #ifdef AUSBEE_SIM
-  cocobot_vrep_get_motor_position(motor_position);
+  if(!fake_vrep)
+  {
+    cocobot_vrep_get_motor_position(motor_position);
+  }
 #else
   cocobot_encoders_get_motor_position(motor_position);
 #endif //AUSBEE_SIM
@@ -86,7 +94,18 @@ void cocobot_position_init(unsigned int task_priority)
   mutex = xSemaphoreCreateMutex();
 
 #ifdef AUSBEE_SIM
-  cocobot_vrep_init();
+  char * fvrep = getenv("FAKE_VREP");
+  if(fvrep != NULL)
+  {
+    if(strcmp(getenv("FAKE_VREP"), "1") == 0) 
+    {
+      fake_vrep = 1;
+    }
+  }
+  if(!fake_vrep)
+  {
+    cocobot_vrep_init();
+  }
 #endif //AUSBEE_SIM
 
   //Be sure that position manager have valid values before continuing the initialization process.
@@ -155,7 +174,15 @@ float cocobot_position_get_speed_angle(void)
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
 {
 #ifdef AUSBEE_SIM
-  cocobot_vrep_set_motor_command(left_motor_speed, right_motor_speed);
+  if(!fake_vrep)
+  {
+    cocobot_vrep_set_motor_command(left_motor_speed, right_motor_speed);
+  }
+  else
+  {
+    motor_position[0] += right_motor_speed / 100.0f;
+    motor_position[1] += left_motor_speed / 100.0f;
+  }
 #else
   if(left_motor_speed > 0xffff)
   {
@@ -220,4 +247,29 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
   }
 
   cocobot_position_set_motor_command(k1 * (linear_speed-angular_velocity), k1 * (linear_speed+angular_velocity));
+}
+
+int cocobot_position_handle_console(char * command)
+{
+  if(strcmp(command,"position_debug") == 0)
+  {
+    cocobot_console_get_iargument(0, &position_debug);
+    cocobot_console_send_answer("%d", position_debug);
+    return 1;
+  }
+
+  return 0;
+}
+
+void cocobot_position_handle_async_console(void)
+{
+  if(position_debug)
+  {
+    cocobot_console_send_asynchronous("position", "%.3f,%.3f,%.3f,%.3f",
+                                     (double)cocobot_position_get_x(),
+                                     (double)cocobot_position_get_y(),
+                                     (double)cocobot_position_get_angle(),
+                                     (double)cocobot_position_get_distance()
+                                    );
+  }
 }

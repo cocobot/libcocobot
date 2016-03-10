@@ -57,5 +57,18 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
  */
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity);
 
+/* Handle console user command related to position module
+ * Argument:
+ *  - command: requested command
+ * Return:
+ *  0 : if command is not reconized
+ *  1 : if command has been successfully handled
+ */
+int cocobot_position_handle_console(char * command);
+
+/* Send asynchronously debug informations if user has requested them
+ */
+void cocobot_position_handle_async_console(void);
+
 
 #endif// COCOBOT_POSITION_H
