@@ -16,6 +16,7 @@ typedef struct
 
 typedef struct
 {
+  char            name[ACTION_NAME_LENGTH];
   unsigned int    score;
   cocobot_pos_t   pos;
   float           execution_time;
@@ -90,8 +91,9 @@ static void cocobot_action_scheduler_update_game_state(void)
   current_game_state.robot_pos.a = cocobot_position_get_angle();
 }
 
-void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback)
+void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback)
 {
+  strncpy(action_list[action_list_end].name, name, ACTION_NAME_LENGTH);
   action_list[action_list_end].score = score;
   action_list[action_list_end].pos.x = x;
   action_list[action_list_end].pos.y = y;

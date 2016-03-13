@@ -1,6 +1,8 @@
 #ifndef COCOBOT_ACTION_SCHEDULER_H
 #define COCOBOT_ACTION_SCHEDULER_H
 
+#define ACTION_NAME_LENGTH 32
+
 typedef enum
 {
   COCOBOT_STRATEGY_DEFENSIVE,
@@ -43,7 +45,7 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed);
  *  - success_proba:  probability that the action succeed when doing it (between 0 and 1)
  *  - callback:       function to call when action should be executed
  */
-void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback);
+void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback);
 
 /* Execute best remaining action based on game's state (selected strategy,
  * remaining time, distance, obstacles, ...)
