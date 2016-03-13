@@ -13,7 +13,7 @@ typedef enum
 // Should return a strictly positive value if execution was done correctly.
 // Should return a strictly negative value when action could not be fully
 // executed and should be done later.
-typedef int (*action_callback)(void);
+typedef int (*action_callback)(void *);
 
 /* Initialize the scheduler and launch a task to keep internal values updated
  * until the end of the game. Must be called once before any other function.
@@ -45,7 +45,7 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed);
  *  - success_proba:  probability that the action succeed when doing it (between 0 and 1)
  *  - callback:       function to call when action should be executed
  */
-void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback);
+void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback, void * callback_arg);
 
 /* Execute best remaining action based on game's state (selected strategy,
  * remaining time, distance, obstacles, ...)

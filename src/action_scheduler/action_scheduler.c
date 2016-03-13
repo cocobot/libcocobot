@@ -22,6 +22,7 @@ typedef struct
   float           execution_time;
   float           success_proba;
   action_callback callback;
+  void *          callback_arg;
   uint8_t         done;
 } cocobot_action_t;
 
@@ -91,7 +92,7 @@ static void cocobot_action_scheduler_update_game_state(void)
   current_game_state.robot_pos.a = cocobot_position_get_angle();
 }
 
-void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback)
+void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback, void * callback_arg)
 {
   strncpy(action_list[action_list_end].name, name, ACTION_NAME_LENGTH);
   action_list[action_list_end].score = score;
@@ -101,6 +102,7 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned
   action_list[action_list_end].execution_time = execution_time;
   action_list[action_list_end].success_proba = success_proba;
   action_list[action_list_end].callback = callback;
+  action_list[action_list_end].callback_arg = callback_arg;
   action_list[action_list_end].done = 0;
 
   if (action_list_end < SCHEDULER_MAX_ACTIONS-1)
@@ -184,11 +186,13 @@ int cocobot_action_scheduler_execute_best_action(void)
     return 0;
   }
 
-  int action_return_value = (*action_list[action_best_index].callback)();
+
+  cocobot_action_t * best_action = &action_list[action_best_index];
+  int action_return_value = (*best_action->callback)(best_action->callback_arg);
 
   if (action_return_value > 0)
   {
-    action_list[action_best_index].done = 1;
+    best_action->done = 1;
   }
 
   return action_return_value;
