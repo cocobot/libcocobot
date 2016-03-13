@@ -23,6 +23,7 @@ typedef struct
   float           success_proba;
   action_callback callback;
   void *          callback_arg;
+  action_unlocked unlocked;
   uint8_t         done;
 } cocobot_action_t;
 
@@ -92,7 +93,9 @@ static void cocobot_action_scheduler_update_game_state(void)
   current_game_state.robot_pos.a = cocobot_position_get_angle();
 }
 
-void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback, void * callback_arg)
+void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
+    unsigned int score, float x, float y, float a, float execution_time, float success_proba,
+    action_callback callback, void * callback_arg, action_unlocked unlocked)
 {
   strncpy(action_list[action_list_end].name, name, ACTION_NAME_LENGTH);
   action_list[action_list_end].score = score;
@@ -103,6 +106,7 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH], unsigned
   action_list[action_list_end].success_proba = success_proba;
   action_list[action_list_end].callback = callback;
   action_list[action_list_end].callback_arg = callback_arg;
+  action_list[action_list_end].unlocked = unlocked;
   action_list[action_list_end].done = 0;
 
   if (action_list_end < SCHEDULER_MAX_ACTIONS-1)
@@ -155,6 +159,10 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
   if (action->done)
   {
     return -0.5f;
+  }
+  if (action->unlocked != NULL && !action->unlocked())
+  {
+    return -0.25f;
   }
 
   // TODO: Take strategy and remaining time to execute other actions into account
