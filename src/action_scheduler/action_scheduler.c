@@ -1,4 +1,6 @@
 #include <cocobot.h>
+#include <FreeRTOS.h>
+#include <task.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -34,7 +36,7 @@ static struct cocobot_game_state_t
 } current_game_state;
 
 
-void cocobot_action_scheduler_init(void)
+static void cocobot_action_scheduler_init(void)
 {
   current_game_state.strat = COCOBOT_STRATEGY_DEFENSIVE;
   current_game_state.robot_pos.x = 0;
@@ -44,6 +46,31 @@ void cocobot_action_scheduler_init(void)
   current_game_state.remaining_time = 90000;
 
   action_list_end = 0;
+}
+
+static void cocobot_action_scheduler_task(void * arg)
+{
+  // arg is always NULL. Prevent "variable unused" warning
+  (void)arg;
+  int action_return_value;
+
+  TickType_t xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while(1)
+  {
+    current_game_state.remaining_time -= 100;
+
+    // Wait 100ms
+    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
+  }
+}
+
+void cocobot_action_scheduler_start(unsigned int task_priority)
+{
+  cocobot_action_scheduler_init();
+
+  // Start task
+  xTaskCreate(cocobot_action_scheduler_task, "action_scheduler", 200, NULL, task_priority, NULL);
 }
 
 void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat)
@@ -58,9 +85,6 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed)
 
 static void cocobot_action_scheduler_update_game_state(void)
 {
-  // TODO: Update remaining time
-  //current_game_state.remaining_time = ;
-
   current_game_state.robot_pos.x = cocobot_position_get_x();
   current_game_state.robot_pos.y = cocobot_position_get_y();
   current_game_state.robot_pos.a = cocobot_position_get_angle();

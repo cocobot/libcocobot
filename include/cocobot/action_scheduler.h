@@ -13,9 +13,12 @@ typedef enum
 // executed and should be done later.
 typedef int (*action_callback)(void);
 
-/* Init scheduler and game's state
+/* Initialize the scheduler and launch a task to keep internal values updated
+ * until the end of the game. Must be called once before any other function.
+ * Argument:
+ *  - task_priority: FreeRTOS task priority for action scheduler thread
  */
-void cocobot_action_scheduler_init(void);
+void cocobot_action_scheduler_start(unsigned int task_priority);
 
 /* Set the strategy used by the scheduler when evaluating actions value
  * (default is COCOBOT_STRATEGY_DEFENSIVE)
