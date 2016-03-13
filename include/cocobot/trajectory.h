@@ -64,8 +64,8 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_backward(float x, float y
 
 /* Goto xy circle order
  * Arguments:
- *  - xi: x coord of the intermediate point
- *  - yi: y coord of the intermediate point
+ *  - xi: x coord of the center point
+ *  - yi: y coord of the center point
  *  - xe: x coord of the ending point
  *  - ye: y coord of the ending point
  *  - time: Maximum allowed time in s for the order (or COCOBOT_TRAJECTORY_UNLIMITED_TIME for no timeout)
@@ -80,7 +80,7 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_backward(float x, float y
  *              \
  *               current pos
  */
-cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_circle(float xi, float yi, float xe, float ye, float time);
+cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_circle(float xc, float yc, float xe, float ye, float time);
 
 /* Goto xy circle order but in backward
  * Arguments:
