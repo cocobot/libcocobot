@@ -109,6 +109,13 @@ void cocobot_asserv_set_state(cocobot_asserv_state_t state)
   _state = state;
 }
 
+cocobot_asserv_state_t cocobot_asserv_get_state(void)
+{
+  return  _state;
+}
+
+
+
 int cocobot_asserv_handle_console(char * command)
 {
   if(strcmp(command,"ramp_distance_speed") == 0)

@@ -17,6 +17,8 @@
 #define TICK2RAD(tick)  ((((float)tick) * M_PI) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
 #define TICK2DEG(tick)  ((((float)tick) * 180.0) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
 #define TICK2MM(tick)  ((((float)tick) * 1000.0) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_METER))
+#define MM2TICK(mm)  (((float)mm) * ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_METER) / 1000.0)
+#define DEG2TICK(deg)  ((((float)deg) / 180.0) * ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
 
 //mutex for internal value access
 static SemaphoreHandle_t mutex;
@@ -272,4 +274,45 @@ void cocobot_position_handle_async_console(void)
                                      (double)cocobot_position_get_distance()
                                     );
   }
+}
+
+void cocobot_position_set_x(float x)
+{
+  cocobot_asserv_state_t saved_state = cocobot_asserv_get_state();
+
+  cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  robot_x = MM2TICK(x);
+  xSemaphoreGive(mutex);
+
+  cocobot_asserv_set_state(saved_state);
+}
+
+void cocobot_position_set_y(float y)
+{
+  cocobot_asserv_state_t saved_state = cocobot_asserv_get_state();
+
+  cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  robot_y = MM2TICK(y);
+  xSemaphoreGive(mutex);
+
+  cocobot_asserv_set_state(saved_state);
+}
+
+void cocobot_position_set_angle(float angle)
+{
+  cocobot_asserv_state_t saved_state = cocobot_asserv_get_state();
+
+  cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  float old_angle = TICK2DEG(robot_angle);
+  float diff = angle - old_angle;
+  robot_angle_offset += DEG2TICK(diff);
+  xSemaphoreGive(mutex);
+
+  cocobot_asserv_set_state(saved_state);
 }

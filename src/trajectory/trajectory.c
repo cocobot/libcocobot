@@ -70,6 +70,7 @@ typedef struct
     float angle;
     float x;
     float y;
+    TickType_t time;
   }start;
 
   struct
@@ -629,6 +630,7 @@ void cocobot_trajectory_task(void * arg)
         order->start.angle = cocobot_position_get_angle();
         order->start.x = cocobot_position_get_x();
         order->start.y = cocobot_position_get_y();
+        order->start.time = xTaskGetTickCount();
 
         order->initialized = 1;
       }
@@ -662,6 +664,14 @@ void cocobot_trajectory_task(void * arg)
           cocobot_console_send_asynchronous("trajectory", "Unknown order type");
           status = COCOBOT_TRAJECTORY_ORDER_DONE;
           break;
+      }
+
+      if(order->time >= 0)
+      {
+        if((xTaskGetTickCount() - order->start.time) / portTICK_PERIOD_MS > order->time * 100.0)
+        {
+          status = COCOBOT_TRAJECTORY_ORDER_DONE;
+        }
       }
 
       //remove order of the list if needed

@@ -33,6 +33,12 @@ void cocobot_asserv_set_angular_set_point(float angular);
  */
 void cocobot_asserv_set_state(cocobot_asserv_state_t state);
 
+/* Get the asserv of the asserv
+ * Return:
+ *  - cocobot_asserv_state_t value (COCOBOT_ASSERV_DISABLE or COCOBOT_ASSERV_ENABLE)
+ */
+cocobot_asserv_state_t cocobot_asserv_get_state(void);
+
 /* Handle console user command related to asserv module
  * Argument:
  *  - command: requested command
