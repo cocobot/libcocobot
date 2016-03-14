@@ -51,6 +51,8 @@ void cocobot_asserv_init(void)
   cocobot_asserv_pid_set_max_integral(&_pid_angu, CONFIG_LIBCOCOBOT_ANGU_PID_MAX_INTEGRAL / 1000.0f);
   cocobot_asserv_pid_set_max_error_for_integration(&_pid_dist, CONFIG_LIBCOCOBOT_DIST_PID_MAX_ERROR_FOR_INTEGRATION / 1000.0f);
   cocobot_asserv_pid_set_max_error_for_integration(&_pid_angu, CONFIG_LIBCOCOBOT_ANGU_PID_MAX_ERROR_FOR_INTEGRATION / 1000.0f);
+
+  cocobot_action_scheduler_set_average_linear_speed(cocobot_asserv_ramp_get_max_speed(&_ramp_dist));
 }
 
 void cocobot_asserv_compute(void)

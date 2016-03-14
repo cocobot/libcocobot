@@ -4,6 +4,9 @@
 #include <mcual.h>
 #include <string.h>
 
+//useful macro for handling commmand
+#define COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, f) do { handled = handled ? handled: f(cmd);} while(0)
+
 typedef int (*cocobot_console_handler_t)(const char *);
 
 /* Initialization of the console module. Need to be called before any other action 
@@ -14,6 +17,16 @@ typedef int (*cocobot_console_handler_t)(const char *);
  *  - handler: function pointer for handling user defined commands
  */
 void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, unsigned int priority_async, cocobot_console_handler_t handler);
+
+/* Try to read a string argument
+ *  - id: position of the argument (0 means first argument)
+ *  - str: reference to a valid storage for the string
+ *  - maxsize: size of the string variable
+ * Return:
+ *  1 : if the argument exists
+ *  0 : if the argument does not exist
+ */
+int cocobot_console_get_sargument(int id, char * str, int maxsize);
 
 /* Try to read a signed integer argument
  *  - id: position of the argument (0 means first argument)

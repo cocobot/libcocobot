@@ -1,4 +1,6 @@
 #include <cocobot.h>
+#include <FreeRTOS.h>
+#include <task.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -14,23 +16,29 @@ typedef struct
 
 typedef struct
 {
+  char            name[ACTION_NAME_LENGTH];
   unsigned int    score;
   cocobot_pos_t   pos;
-  float           execution_time;
+  int32_t         execution_time;
   float           success_proba;
   action_callback callback;
+  void *          callback_arg;
+  action_unlocked unlocked;
   uint8_t         done;
 } cocobot_action_t;
 
 static cocobot_action_t action_list[SCHEDULER_MAX_ACTIONS];
 static unsigned int action_list_end;
 
+#define INITIAL_REMAINING_TIME 90000
+static TickType_t start_time = 0;
+
 static struct cocobot_game_state_t
 {
   cocobot_strategy_t  strat;
   cocobot_pos_t       robot_pos;
   float               robot_average_linear_speed; // in m/s (or mm/ms)
-  float               remaining_time; // in ms
+  int32_t             remaining_time; // in ms
 } current_game_state;
 
 
@@ -41,7 +49,7 @@ void cocobot_action_scheduler_init(void)
   current_game_state.robot_pos.y = 0;
   current_game_state.robot_pos.a = 0;
   current_game_state.robot_average_linear_speed = 0;
-  current_game_state.remaining_time = 90000;
+  current_game_state.remaining_time = INITIAL_REMAINING_TIME;
 
   action_list_end = 0;
 }
@@ -56,18 +64,26 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed)
   current_game_state.robot_average_linear_speed = speed;
 }
 
+void cocobot_action_scheduler_start(void)
+{
+  start_time = xTaskGetTickCount();
+}
+
 static void cocobot_action_scheduler_update_game_state(void)
 {
-  // TODO: Update remaining time
-  //current_game_state.remaining_time = ;
+  current_game_state.remaining_time = INITIAL_REMAINING_TIME -
+                                      (xTaskGetTickCount() - start_time) * portTICK_PERIOD_MS;
 
   current_game_state.robot_pos.x = cocobot_position_get_x();
   current_game_state.robot_pos.y = cocobot_position_get_y();
   current_game_state.robot_pos.a = cocobot_position_get_angle();
 }
 
-void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, float a, float execution_time, float success_proba, action_callback callback)
+void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
+    unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
+    action_callback callback, void * callback_arg, action_unlocked unlocked)
 {
+  strncpy(action_list[action_list_end].name, name, ACTION_NAME_LENGTH);
   action_list[action_list_end].score = score;
   action_list[action_list_end].pos.x = x;
   action_list[action_list_end].pos.y = y;
@@ -75,6 +91,8 @@ void cocobot_action_scheduler_add_action(unsigned int score, float x, float y, f
   action_list[action_list_end].execution_time = execution_time;
   action_list[action_list_end].success_proba = success_proba;
   action_list[action_list_end].callback = callback;
+  action_list[action_list_end].callback_arg = callback_arg;
+  action_list[action_list_end].unlocked = unlocked;
   action_list[action_list_end].done = 0;
 
   if (action_list_end < SCHEDULER_MAX_ACTIONS-1)
@@ -128,12 +146,23 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
   {
     return -0.5f;
   }
+  if (action->unlocked != NULL && !action->unlocked())
+  {
+    return -0.25f;
+  }
 
   // TODO: Take strategy and remaining time to execute other actions into account
   float potential_elementary_value = action->score / (action->execution_time + cocobot_action_scheduler_time_to_reach(action));
   float effective_elementary_value = action->success_proba * potential_elementary_value;
 
   return effective_elementary_value;
+}
+
+static void cocobot_action_scheduler_goto(cocobot_action_t * action)
+{
+  cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
+  cocobot_trajectory_goto_a(action->pos.a, -1);
+  cocobot_trajectory_wait();
 }
 
 int cocobot_action_scheduler_execute_best_action(void)
@@ -158,11 +187,13 @@ int cocobot_action_scheduler_execute_best_action(void)
     return 0;
   }
 
-  int action_return_value = (*action_list[action_best_index].callback)();
+  cocobot_action_t * best_action = &action_list[action_best_index];
+  cocobot_action_scheduler_goto(best_action);
+  int action_return_value = (*best_action->callback)(best_action->callback_arg);
 
   if (action_return_value > 0)
   {
-    action_list[action_best_index].done = 1;
+    best_action->done = 1;
   }
 
   return action_return_value;

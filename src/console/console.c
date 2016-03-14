@@ -7,6 +7,8 @@
 #include <task.h>
 #include <semphr.h>
 
+
+
 //define protocol special characters
 #define COCOBOT_CONSOLE_ASYNCHRONOUS_START  "#"
 #define COCOBOT_CONSOLE_SYNCHRONOUS_START   "< "
@@ -15,8 +17,6 @@
 #define COCOBOT_CONSOLE_USER_INPUT_START    ">"
 #define COCOBOT_CONSOLE_BUFFER_LENGTH       255
 
-//useful macro for handling commmand
-#define TRY_HANDLER_IF_NEEDED(handled, cmd, f) do { handled = handled ? handled: f(cmd);} while(0)
 
 //internal parameters
 static mcual_usart_id_t _usart;
@@ -103,6 +103,46 @@ int cocobot_console_handle_freertos(char * command)
   return 0;
 }
 
+int cocobot_console_handle_system(char * command)
+{
+  //list freertos task
+  if(strcmp(command,"system_reboot") == 0)
+  {
+    mcual_bootloader();
+    return 1;
+  }
+
+  return 0;
+}
+
+
+int cocobot_console_get_sargument(int id, char * str, int maxsize)
+{
+  char * ptr = _arguments;
+  while(*ptr)
+  {
+    if(id == 0)
+    {
+      memset(str, 0, maxsize);
+      for(int i = 0; i < maxsize - 1; i += 1, str += 1, ptr += 1)
+      {
+        if((*ptr == 0) || (*ptr == ' '))
+        {
+          break;
+        }
+        *str = *ptr;
+      }
+      return 1;
+    }
+    if(*ptr == ' ')
+    {
+      id -= 1;
+    }
+    ptr += 1;
+  }
+
+  return 0;
+}
 
 int cocobot_console_get_fargument(int id, float * out)
 {
@@ -145,6 +185,7 @@ void cocobot_console_async_thread(void *arg)
   while(pdTRUE)
   {
     //send debug information if needed
+    cocobot_position_handle_async_console();
     cocobot_asserv_handle_async_console();
 
     //wait 100ms (minus time used by previous handler)
@@ -185,13 +226,16 @@ void cocobot_console_sync_thread(void *arg)
 
         //try to parse the command with builtin command
         int handled = 0;
-        TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_console_handle_freertos);
-        TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_asserv_handle_console);
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_console_handle_system);
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_console_handle_freertos);
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_position_handle_console);
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_trajectory_handle_console);
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_asserv_handle_console);
 
         //try to parse the command with user defined callback
         if(_user_handler != NULL)
         {
-          TRY_HANDLER_IF_NEEDED(handled, cmd, _user_handler);
+          COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, _user_handler);
         }
 
         if(!handled)
