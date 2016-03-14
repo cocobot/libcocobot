@@ -73,7 +73,6 @@ static void cocobot_action_scheduler_update_game_state(void)
 {
   current_game_state.remaining_time = INITIAL_REMAINING_TIME -
                                       (xTaskGetTickCount() - start_time) * portTICK_PERIOD_MS;
-  printf("%d\n", current_game_state.remaining_time);
 
   current_game_state.robot_pos.x = cocobot_position_get_x();
   current_game_state.robot_pos.y = cocobot_position_get_y();
@@ -159,6 +158,13 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
   return effective_elementary_value;
 }
 
+static void cocobot_action_scheduler_goto(cocobot_action_t * action)
+{
+  cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
+  cocobot_trajectory_goto_a(action->pos.a, -1);
+  cocobot_trajectory_wait();
+}
+
 int cocobot_action_scheduler_execute_best_action(void)
 {
   unsigned int action_current_index = 0;
@@ -181,8 +187,8 @@ int cocobot_action_scheduler_execute_best_action(void)
     return 0;
   }
 
-
   cocobot_action_t * best_action = &action_list[action_best_index];
+  cocobot_action_scheduler_goto(best_action);
   int action_return_value = (*best_action->callback)(best_action->callback_arg);
 
   if (action_return_value > 0)
