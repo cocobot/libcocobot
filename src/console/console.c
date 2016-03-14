@@ -7,6 +7,8 @@
 #include <task.h>
 #include <semphr.h>
 
+
+
 //define protocol special characters
 #define COCOBOT_CONSOLE_ASYNCHRONOUS_START  "#"
 #define COCOBOT_CONSOLE_SYNCHRONOUS_START   "< "
@@ -95,6 +97,18 @@ int cocobot_console_handle_freertos(char * command)
                tasks[i].usStackHighWaterMark
                );
     }
+    return 1;
+  }
+
+  return 0;
+}
+
+int cocobot_console_handle_system(char * command)
+{
+  //list freertos task
+  if(strcmp(command,"system_reboot") == 0)
+  {
+    mcual_bootloader();
     return 1;
   }
 
@@ -212,6 +226,7 @@ void cocobot_console_sync_thread(void *arg)
 
         //try to parse the command with builtin command
         int handled = 0;
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_console_handle_system);
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_console_handle_freertos);
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_position_handle_console);
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_trajectory_handle_console);
