@@ -17,12 +17,9 @@ typedef int (*action_callback)(void *);
 
 typedef int (*action_unlocked)(void);
 
-/* Initialize the scheduler and launch a task to keep internal values updated
- * until the end of the game. Must be called once before any other function.
- * Argument:
- *  - task_priority: FreeRTOS task priority for action scheduler thread
+/* Init scheduler and game's state. Must be called once before any other function.
  */
-void cocobot_action_scheduler_start(unsigned int task_priority);
+void cocobot_action_scheduler_init(void);
 
 /* Set the strategy used by the scheduler when evaluating actions value
  * (default is COCOBOT_STRATEGY_DEFENSIVE)
@@ -39,16 +36,21 @@ void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat);
  */
 void cocobot_action_scheduler_set_average_linear_speed(float speed);
 
+/* Start internal variables computation. Must be called when game starts and
+ * before cocobot_action_scheduler_execute_best_action.
+ */
+void cocobot_action_scheduler_start(void);
+
 /* Add a new action to the scheduler
  * Argument:
  *  - score:          points given when action succeed
  *  - x, y, a:        position (mm) and angle (deg), relatively to the table, to start the action
- *  - execution_time: time needed to guarantee the action's full execution
+ *  - execution_time: time needed to guarantee the action's full execution (in ms)
  *  - success_proba:  probability that the action succeed when doing it (between 0 and 1)
  *  - callback:       function to call when action should be executed
  */
 void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
-    unsigned int score, float x, float y, float a, float execution_time, float success_proba,
+    unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
     action_callback callback, void * callback_arg, action_unlocked unlocked);
 
 /* Execute best remaining action based on game's state (selected strategy,

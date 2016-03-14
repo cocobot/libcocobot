@@ -19,7 +19,7 @@ typedef struct
   char            name[ACTION_NAME_LENGTH];
   unsigned int    score;
   cocobot_pos_t   pos;
-  float           execution_time;
+  int32_t         execution_time;
   float           success_proba;
   action_callback callback;
   void *          callback_arg;
@@ -30,50 +30,28 @@ typedef struct
 static cocobot_action_t action_list[SCHEDULER_MAX_ACTIONS];
 static unsigned int action_list_end;
 
+#define INITIAL_REMAINING_TIME 90000
+static TickType_t start_time = 0;
+
 static struct cocobot_game_state_t
 {
   cocobot_strategy_t  strat;
   cocobot_pos_t       robot_pos;
   float               robot_average_linear_speed; // in m/s (or mm/ms)
-  float               remaining_time; // in ms
+  int32_t             remaining_time; // in ms
 } current_game_state;
 
 
-static void cocobot_action_scheduler_init(void)
+void cocobot_action_scheduler_init(void)
 {
   current_game_state.strat = COCOBOT_STRATEGY_DEFENSIVE;
   current_game_state.robot_pos.x = 0;
   current_game_state.robot_pos.y = 0;
   current_game_state.robot_pos.a = 0;
   current_game_state.robot_average_linear_speed = 0;
-  current_game_state.remaining_time = 90000;
+  current_game_state.remaining_time = INITIAL_REMAINING_TIME;
 
   action_list_end = 0;
-}
-
-static void cocobot_action_scheduler_task(void * arg)
-{
-  // arg is always NULL. Prevent "variable unused" warning
-  (void)arg;
-  int action_return_value;
-
-  TickType_t xLastWakeTime;
-  xLastWakeTime = xTaskGetTickCount();
-  while(1)
-  {
-    current_game_state.remaining_time -= 100;
-
-    // Wait 100ms
-    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_PERIOD_MS);
-  }
-}
-
-void cocobot_action_scheduler_start(unsigned int task_priority)
-{
-  cocobot_action_scheduler_init();
-
-  // Start task
-  xTaskCreate(cocobot_action_scheduler_task, "action_scheduler", 200, NULL, task_priority, NULL);
 }
 
 void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat)
@@ -86,15 +64,24 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed)
   current_game_state.robot_average_linear_speed = speed;
 }
 
+void cocobot_action_scheduler_start(void)
+{
+  start_time = xTaskGetTickCount();
+}
+
 static void cocobot_action_scheduler_update_game_state(void)
 {
+  current_game_state.remaining_time = INITIAL_REMAINING_TIME -
+                                      (xTaskGetTickCount() - start_time) * portTICK_PERIOD_MS;
+  printf("%d\n", current_game_state.remaining_time);
+
   current_game_state.robot_pos.x = cocobot_position_get_x();
   current_game_state.robot_pos.y = cocobot_position_get_y();
   current_game_state.robot_pos.a = cocobot_position_get_angle();
 }
 
 void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
-    unsigned int score, float x, float y, float a, float execution_time, float success_proba,
+    unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
     action_callback callback, void * callback_arg, action_unlocked unlocked)
 {
   strncpy(action_list[action_list_end].name, name, ACTION_NAME_LENGTH);
