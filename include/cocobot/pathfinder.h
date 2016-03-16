@@ -1,25 +1,7 @@
 #ifndef COCOBOT_PATHFINDER_H
 #define COCOBOT_PATHFINDER_H
 
-typedef enum
-{
-    NEW_NODE = 0,
-    OBSTACLE,
-    CLOSED_LIST,
-    FINAL_TRAJ,
-    OPEN_LIST,
-    ROBOT
-}cocobot_nodeType_e;
-
-typedef struct
-{
-    uint8_t x;
-    uint8_t y;
-    uint8_t nodeType; //is a nodeType_e cast in uint8_t to be sure of the size
-    float cost;
-    uint8_t pX;
-    uint8_t pY;
-}cocobot_node_s;
+#include "cocobot/pathfinder_table.h"
 
 typedef struct list list_s;
 
@@ -57,9 +39,9 @@ typedef struct
  * Arguments:
  *  - starting_point: trajectory starting point
  *  - target_point: trajectory target point 
- *  *
- * Return Value: t
+ *  
+ * Return Value: cocobot_strategy_t : contains the trajectory
  */
-cocobot_strategy_t cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_point_s target_point);
+cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_point_s target_point);
 
 #endif //COCOBOT_PATHFINDER_H
