@@ -3,14 +3,6 @@
 
 #include "cocobot/pathfinder_table.h"
 
-typedef struct list list_s;
-
-struct list
-{
-    cocobot_node_s* p_node;
-    list_s* p_nextElement;
-};
-
 /**
  * A point on the table
  * x in mm

@@ -28,6 +28,14 @@ typedef struct
 }cocobot_node_s;
 
 
+typedef struct list list_s;
+
+struct list
+{
+    cocobot_node_s* p_node;
+    list_s* p_nextElement;
+};
+
 //Table related functions
 void initialiseTable(cocobot_node_s _table[][TABLE_WIDTH/GRID_SIZE], int _length, int _width);
 void setPoint(cocobot_node_s _p_table[][TABLE_WIDTH/GRID_SIZE], int _x, int _y, cocobot_nodeType_e _nodeType);
