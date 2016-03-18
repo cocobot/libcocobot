@@ -3,6 +3,7 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <task.h>
+#include <event_groups.h>
 #include <math.h>
 
 #define TRAJECTORY_MAX_ORDER 32
@@ -12,6 +13,8 @@
 #define TRAJECTORY_EST_STOP_ANGLE_DEG 30.0f
 
 #define TRAJECTORY_FLAG_SLOW_DOWN (1 << 0)
+
+#define BIT_0 (1 << 0)
 
 typedef enum
 {
@@ -105,6 +108,8 @@ static cocobot_trajectory_handle_t last_handle;
 
 //handle end of trajectory point list
 static volatile cocobot_trajectory_result_t result;
+
+static EventGroupHandle_t no_more_orders;
 
 static float cocobot_trajectory_find_best_angle(float current_angle, float angle)
 {
@@ -668,9 +673,12 @@ void cocobot_trajectory_task(void * arg)
 
       if(order->time >= 0)
       {
-        if((xTaskGetTickCount() - order->start.time) / portTICK_PERIOD_MS > order->time * 100.0)
+        if((xTaskGetTickCount() - order->start.time) * portTICK_PERIOD_MS > order->time)
         {
           status = COCOBOT_TRAJECTORY_ORDER_DONE;
+
+          cocobot_asserv_set_distance_set_point(cocobot_position_get_distance());
+          cocobot_asserv_set_angular_set_point(cocobot_position_get_angle());
         }
       }
 
@@ -685,6 +693,7 @@ void cocobot_trajectory_task(void * arg)
     else if(result == COCOBOT_TRAJECTORY_RUNNING)
     {
       result = COCOBOT_TRAJECTORY_SUCCESS;
+      xEventGroupSetBits(no_more_orders, BIT_0);
     }
 
     //wait 100ms
@@ -702,6 +711,9 @@ void cocobot_trajectory_init(unsigned int task_priority)
 
   //create mutex
   mutex = xSemaphoreCreateMutex();
+  
+  //create event
+  no_more_orders = xEventGroupCreate();
 
   //init handle generator
   last_handle = 0;
@@ -741,6 +753,7 @@ void cocobot_add_new_order(cocobot_trajectory_order_t * order)
   estimations_need_recompute = 1;
 
   xSemaphoreGive(mutex);
+  xEventGroupClearBits(no_more_orders, BIT_0);
 }
 
 cocobot_trajectory_handle_t cocobot_trajectory_goto_d(float distance, float time)
@@ -851,7 +864,10 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_circle_backward(float xc,
 
 cocobot_trajectory_result_t cocobot_trajectory_wait(void)
 {
-  while(result == COCOBOT_TRAJECTORY_RUNNING);
+  while(result == COCOBOT_TRAJECTORY_RUNNING)
+  {
+    xEventGroupWaitBits(no_more_orders, BIT_0, pdFALSE, pdFALSE, 100 / portTICK_PERIOD_MS); 
+  }
 
   return result;
 }

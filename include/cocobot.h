@@ -1,6 +1,9 @@
 #ifndef COCOBOT_H
 #define COCOBOT_H
 
+//load config
+#include "cocobot_config.h"
+
 #include <cocobot/position.h>
 #include <cocobot/console.h>
 #include <cocobot/lcd.h>

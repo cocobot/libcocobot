@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define SCHEDULER_MAX_ACTIONS 16
+#define SCHEDULER_MAX_ACTIONS 32
 
 #define EUCLIDEAN_DISTANCE(x, y) (sqrt((x)*(x) + (y)*(y)))
 

@@ -3,10 +3,16 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
+#ifdef AUSBEE_SIM
+# include <time.h> //for random seed
+#endif
+
+#define USER_DATA_SIZE 16
 
 static cocobot_game_state_funny_action_t _funny_action;
 static TimerHandle_t _end_match_timer;
 static cocobot_game_state_color_t _color;
+static void * _userdata[USER_DATA_SIZE];
 
 static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 {
@@ -53,4 +59,15 @@ void cocobot_game_state_wait_for_starter_removed(void)
 cocobot_game_state_color_t cocobot_game_state_get_color(void)
 {
   return _color;
+}
+
+
+void cocobot_game_state_set_userdata(unsigned int id, void * data)
+{
+  _userdata[id] = data;
+}
+
+void * cocobot_game_state_get_userdata(unsigned int id)
+{
+  return _userdata[id];
 }

@@ -52,4 +52,10 @@ int cocobot_asserv_handle_console(char * command);
  */
 void cocobot_asserv_handle_async_console(void);
 
+/* Get the linear speed of the robot (assumpe acceleration is inifite)
+ * Return:
+ *  - the linear speed in mm/ms
+ */
+float cocobot_asserv_get_linear_speed(void);
+
 #endif// COCOBOT_ASSERV_H
