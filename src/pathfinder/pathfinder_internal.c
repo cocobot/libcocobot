@@ -1,10 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #include "cocobot/pathfinder_internal.h"
 
 //static cocobot_node_s g_start_node;
 static cocobot_node_s g_target_node;
+static cocobot_node_s g_start_node;
 
 void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
 {
@@ -118,20 +120,32 @@ int removeFromList(list_s* _p_list, cocobot_node_s* _p_node)
     return 0;
 }
 
-list_s* getPath(cocobot_node_s*_p_finalNode, cocobot_node_s** p_table)
+void cocobot_pathfinder_set_target_node(cocobot_node_s *target_node)
+{
+    memcpy(&g_target_node, target_node, sizeof(cocobot_node_s));
+}
+
+void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node)
+{
+    memcpy(&g_start_node, start_node, sizeof(cocobot_node_s));
+}
+
+list_s* getPath(cocobot_node_s *_p_finalNode, cocobot_node_s p_table[][TABLE_WIDTH/GRID_SIZE])
 {
     //TRACE_DEBUG("x=%d y=%d\n",_p_finalNode->x, _p_finalNode->y);
-    printf("%p, %p", _p_finalNode,p_table);
+    //printf("%p, %p", _p_finalNode,p_table);
     list_s* finalTraj = NULL;
-    //while((_p_finalNode->x !=  g_startNode->x) || (_p_finalNode->y != g_startNode->y))
-    //{
-    //    //TRACE_DEBUG("px= %d, py= %d\n", _p_finalNode->pX, _p_finalNode->pY);
-    //    _p_finalNode->nodeType = FINAL_TRAJ; 
-    //    addToList(&finalTraj, _p_finalNode);
-    //    _p_finalNode = &p_table[_p_finalNode->pX][_p_finalNode->pY];
+    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", _p_finalNode->x, _p_finalNode->y);
+    while((_p_finalNode->x !=  g_start_node.x) || (_p_finalNode->y != g_start_node.y))
+    {
+        cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", _p_finalNode->pX, _p_finalNode->pY);
+        //_p_finalNode->nodeType = FINAL_TRAJ; 
+        //addToList(&finalTraj, _p_finalNode);
+        _p_finalNode = &p_table[_p_finalNode->pX][_p_finalNode->pY];
 
-    //}
-    //_p_finalNode->nodeType = FINAL_TRAJ; 
+    }
+    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", _p_finalNode->x, _p_finalNode->y);
+    _p_finalNode->nodeType = FINAL_TRAJ; 
     return finalTraj;
 }
 

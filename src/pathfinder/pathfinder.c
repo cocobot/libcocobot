@@ -17,9 +17,11 @@ cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_
    
     //start_node
     cocobot_node_s* start_node = &g_table[starting_point.x/GRID_SIZE][starting_point.y/GRID_SIZE];
+    cocobot_pathfinder_set_start_node(start_node);
 
     //target_node
     cocobot_node_s* target_node = &g_table[target_point.x/GRID_SIZE][target_point.y/GRID_SIZE];
+    cocobot_pathfinder_set_target_node(target_node);
 
     cocobot_node_s* p_currentNode = start_node;
     p_currentNode->cost = cocobot_get_distance(p_currentNode, target_node);
@@ -52,7 +54,7 @@ cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_
         }
     }
     
-    //getPath(p_currentNode, _p_table, _p_screen);
+    getPath(p_currentNode, g_table);
     return toto;
 }
 
