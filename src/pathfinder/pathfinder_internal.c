@@ -1,8 +1,9 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include "cocobot/pathfinder_internal.h"
 
-static cocobot_node_s g_start_node;
+//static cocobot_node_s g_start_node;
 static cocobot_node_s g_target_node;
 
 void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
@@ -27,7 +28,9 @@ void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, c
         }
     }
     else
+    {
         ;//Do nothing for all other cases
+    }
 }
 
 float cocobot_get_distance(cocobot_node_s *_p_source, cocobot_node_s *_p_dest)
@@ -118,6 +121,7 @@ int removeFromList(list_s* _p_list, cocobot_node_s* _p_node)
 list_s* getPath(cocobot_node_s*_p_finalNode, cocobot_node_s** p_table)
 {
     //TRACE_DEBUG("x=%d y=%d\n",_p_finalNode->x, _p_finalNode->y);
+    printf("%p, %p", _p_finalNode,p_table);
     list_s* finalTraj = NULL;
     //while((_p_finalNode->x !=  g_startNode->x) || (_p_finalNode->y != g_startNode->y))
     //{

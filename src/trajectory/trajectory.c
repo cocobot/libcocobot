@@ -16,6 +16,8 @@
 
 #define BIT_0 (1 << 0)
 
+#define M_PI 3.14159265358979323846264338327
+
 typedef enum
 {
   COCOBOT_TRAJECTORY_GOTO_D,
