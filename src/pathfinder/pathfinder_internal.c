@@ -13,14 +13,14 @@ void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, c
         node->pX = parent_node->x;
         node->pY = parent_node->y;
         node->nodeType = OPEN_LIST;
-        node->cost = (parent_node->cost - cocobot_get_distance(parent_node, g_targetNode)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, g_targetNode);
+        node->cost = (parent_node->cost - cocobot_get_distance(parent_node, &g_target_node)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, &g_target_node);
         addToList(open_list, node);
     }
     else if(node->nodeType == OPEN_LIST)
     {
-        if((parent_node->cost - cocobot_get_distance(parent_node, g_targetNode)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, g_targetNode) < node->cost)
+        if((parent_node->cost - cocobot_get_distance(parent_node, &g_target_node)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, &g_target_node) < node->cost)
         {
-            node->cost = (parent_node->cost - cocobot_get_distance(parent_node, g_targetNode)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, g_targetNode);
+            node->cost = (parent_node->cost - cocobot_get_distance(parent_node, &g_target_node)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, &g_target_node);
             node->pX = parent_node->x;
             node->pY = parent_node->y;
             addToList(open_list, node);
