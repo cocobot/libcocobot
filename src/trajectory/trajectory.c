@@ -3,6 +3,7 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <task.h>
+#include <event_groups.h>
 #include <math.h>
 
 #define TRAJECTORY_MAX_ORDER 32
@@ -12,6 +13,8 @@
 #define TRAJECTORY_EST_STOP_ANGLE_DEG 30.0f
 
 #define TRAJECTORY_FLAG_SLOW_DOWN (1 << 0)
+
+#define BIT_0 (1 << 0)
 
 typedef enum
 {
@@ -70,6 +73,7 @@ typedef struct
     float angle;
     float x;
     float y;
+    TickType_t time;
   }start;
 
   struct
@@ -104,6 +108,8 @@ static cocobot_trajectory_handle_t last_handle;
 
 //handle end of trajectory point list
 static volatile cocobot_trajectory_result_t result;
+
+static EventGroupHandle_t no_more_orders;
 
 static float cocobot_trajectory_find_best_angle(float current_angle, float angle)
 {
@@ -208,7 +214,7 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy(cocob
 
 
 
-  if(sqrt(cd) > sqrt(td) - TRAJECTORY_XY_STOP_MM)
+  if(sqrtf(cd) > sqrtf(td) - TRAJECTORY_XY_STOP_MM)
   {
     return COCOBOT_TRAJECTORY_ORDER_DONE;
   }
@@ -219,13 +225,13 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy(cocob
     float dd = dx * dx + dy * dy;
 
     float cur_angle = cocobot_position_get_angle();
-    double abs_target = atan2(dy, dx) * 180.0 / M_PI;
+    float abs_target = atan2f(dy, dx) * 180.0f / M_PI;
 
     float target = cocobot_trajectory_find_best_angle(cur_angle, abs_target);
     if(fabsf(cur_angle - target) < TRAJECTORY_XY_STOP_ANGLE_DEG)
     {
       order->xy_order.d_stop = NAN;
-      cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() + sqrt(dd) + order->estimated_distance_before_stop);
+      cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() + sqrtf(dd) + order->estimated_distance_before_stop);
     }
     else
     {
@@ -247,8 +253,8 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy_circl
   float x = cocobot_position_get_x();
   float y = cocobot_position_get_y();
 
-  float abs_end_angle = atan2(order->circle_order.ye - order->circle_order.yc, order->circle_order.xe - order->circle_order.xc) * 180.0 /M_PI + 90;
-  float abs_target_angle = atan2(y - order->circle_order.yc, x - order->circle_order.xc) * 180.0 / M_PI + 90;
+  float abs_end_angle = atan2f(order->circle_order.ye - order->circle_order.yc, order->circle_order.xe - order->circle_order.xc) * 180.0 /M_PI + 90;
+  float abs_target_angle = atan2f(y - order->circle_order.yc, x - order->circle_order.xc) * 180.0 / M_PI + 90;
   float diff = abs_target_angle - abs_end_angle;
   while(diff > 360) {
     diff -= 360.0;
@@ -262,11 +268,11 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy_circl
     float dcx = order->circle_order.xe - order->circle_order.xc;
     float dcy = order->circle_order.ye - order->circle_order.yc;
     float radius2 = dcx * dcx + dcy * dcy;
-    float radius = sqrt(radius2);
+    float radius = sqrtf(radius2);
 
     float dccx = x - order->circle_order.xc;
     float dccy = y - order->circle_order.yc;
-    float d2c = sqrt(dccx * dccx + dccy * dccy);
+    float d2c = sqrtf(dccx * dccx + dccy * dccy);
 
 
     float dd = 2 * M_PI * radius * diff / 360.0 + fabsf(d2c - radius);
@@ -279,7 +285,7 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy_circl
     {
       float target = cocobot_trajectory_find_best_angle(cocobot_position_get_angle(), abs_target_angle);
       cocobot_asserv_set_angular_set_point(target);
-      cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() + sqrt(dd));
+      cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() + sqrtf(dd));
     }
   }
   else
@@ -295,12 +301,12 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy_circl
     else
     {
       float cur_angle = cocobot_position_get_angle();
-      double abs_target = atan2(dy, dx) * 180.0 / M_PI;
+      double abs_target = atan2f(dy, dx) * 180.0 / M_PI;
 
       float target = cocobot_trajectory_find_best_angle(cur_angle, abs_target);
       if(fabsf(cur_angle - target) < TRAJECTORY_XY_STOP_ANGLE_DEG)
       {
-        cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() + sqrt(dd));
+        cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() + sqrtf(dd));
       }
       else
       {
@@ -330,7 +336,7 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy_backw
 
 
 
-  if(sqrt(cd) > sqrt(td) - TRAJECTORY_XY_STOP_MM)
+  if(sqrtf(cd) > sqrtf(td) - TRAJECTORY_XY_STOP_MM)
   {
     return COCOBOT_TRAJECTORY_ORDER_DONE;
   }
@@ -341,13 +347,13 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy_backw
     float dd = dx * dx + dy * dy;
 
     float cur_angle = cocobot_position_get_angle();
-    double abs_target = atan2(dy, dx) * 180.0 / M_PI + 180.0;
+    double abs_target = atan2f(dy, dx) * 180.0 / M_PI + 180.0;
 
     float target = cocobot_trajectory_find_best_angle(cur_angle, abs_target);
     if(fabsf(cur_angle - target) < TRAJECTORY_XY_STOP_ANGLE_DEG)
     {
       order->xy_order.d_stop = NAN;
-      cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() - sqrt(dd) - order->estimated_distance_before_stop);
+      cocobot_asserv_set_distance_set_point(cocobot_position_get_distance() - sqrtf(dd) - order->estimated_distance_before_stop);
     }
     else
     {
@@ -375,7 +381,7 @@ static void cocobot_trajectory_compute_estimations(void)
   {
     cocobot_trajectory_order_t * order = NULL;
 
-    if(opost != order_list_write)
+    if(opost != (int)order_list_write)
     {
       order = &order_list[opost];
     }
@@ -401,8 +407,8 @@ static void cocobot_trajectory_compute_estimations(void)
     switch(order->type)
     {
       case COCOBOT_TRAJECTORY_GOTO_D:
-        order->estimated_end.x = order->estimated_start.x + order->d_order.distance * cos(order->estimated_start.angle * M_PI / 180.0);
-        order->estimated_end.y = order->estimated_start.y + order->d_order.distance * sin(order->estimated_start.angle * M_PI / 180.0);
+        order->estimated_end.x = order->estimated_start.x + order->d_order.distance * cosf(order->estimated_start.angle * M_PI / 180.0);
+        order->estimated_end.y = order->estimated_start.y + order->d_order.distance * sinf(order->estimated_start.angle * M_PI / 180.0);
         order->estimated_end.angle = order->estimated_start.angle;
         break;
 
@@ -415,19 +421,19 @@ static void cocobot_trajectory_compute_estimations(void)
       case COCOBOT_TRAJECTORY_GOTO_XY:
         order->estimated_end.x = order->xy_order.x;
         order->estimated_end.y = order->xy_order.y;
-        order->estimated_end.angle = atan2(order->estimated_end.y - order->estimated_start.y, order->estimated_end.x - order->estimated_start.x) * 180.0 / M_PI;
+        order->estimated_end.angle = atan2f(order->estimated_end.y - order->estimated_start.y, order->estimated_end.x - order->estimated_start.x) * 180.0 / M_PI;
         break;
 
       case COCOBOT_TRAJECTORY_GOTO_XY_BACKWARD:
         order->estimated_end.x = order->xy_order.x;
         order->estimated_end.y = order->xy_order.y;
-        order->estimated_end.angle = atan2(order->estimated_end.y - order->estimated_start.y, order->estimated_end.x - order->estimated_start.x) * 180.0 / M_PI + 180.0;
+        order->estimated_end.angle = atan2f(order->estimated_end.y - order->estimated_start.y, order->estimated_end.x - order->estimated_start.x) * 180.0 / M_PI + 180.0;
         break;
 
       case COCOBOT_TRAJECTORY_GOTO_XY_CIRCLE:
         order->estimated_end.x = order->circle_order.xe;
         order->estimated_end.y = order->circle_order.ye;
-        order->estimated_end.angle = atan2(order->circle_order.ye - order->circle_order.yc, order->circle_order.xe - order->circle_order.xc) * 180.0 / M_PI + 90.0;
+        order->estimated_end.angle = atan2f(order->circle_order.ye - order->circle_order.yc, order->circle_order.xe - order->circle_order.xc) * 180.0 / M_PI + 90.0;
         break;
 
 
@@ -513,12 +519,12 @@ static void cocobot_trajectory_compute_estimations(void)
             angle -= 360;
           }
 
-          if((!forward) && (fabs(angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
+          if((!forward) && (fabsf(angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
           {
             order->estimated_distance_before_stop = distance;
             float dx = order->estimated_end.x - order->estimated_start.x;
             float dy = order->estimated_end.y - order->estimated_start.y;
-            distance += sqrt(dx * dx + dy * dy);
+            distance += sqrtf(dx * dx + dy * dy);
 
           }
           else
@@ -559,7 +565,7 @@ static void cocobot_trajectory_compute_estimations(void)
           }
 
 
-          if((forward) && (fabs(angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
+          if((forward) && (fabsf(angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
           {
             order->estimated_distance_before_stop = distance;
           }
@@ -571,7 +577,7 @@ static void cocobot_trajectory_compute_estimations(void)
 
           float dx = order->estimated_end.x - order->estimated_start.x;
           float dy = order->estimated_end.y - order->estimated_start.y;
-          distance += sqrt(dx * dx + dy * dy);
+          distance += sqrtf(dx * dx + dy * dy);
 
           last_angle = order->estimated_end.angle;
           forward = 1;
@@ -585,7 +591,7 @@ static void cocobot_trajectory_compute_estimations(void)
         break;
     }
 
-    if(opost == order_list_read)
+    if(opost == (int)order_list_read)
     {
       break;
     }
@@ -629,6 +635,7 @@ void cocobot_trajectory_task(void * arg)
         order->start.angle = cocobot_position_get_angle();
         order->start.x = cocobot_position_get_x();
         order->start.y = cocobot_position_get_y();
+        order->start.time = xTaskGetTickCount();
 
         order->initialized = 1;
       }
@@ -664,6 +671,17 @@ void cocobot_trajectory_task(void * arg)
           break;
       }
 
+      if(order->time >= 0)
+      {
+        if((xTaskGetTickCount() - order->start.time) * portTICK_PERIOD_MS > order->time)
+        {
+          status = COCOBOT_TRAJECTORY_ORDER_DONE;
+
+          cocobot_asserv_set_distance_set_point(cocobot_position_get_distance());
+          cocobot_asserv_set_angular_set_point(cocobot_position_get_angle());
+        }
+      }
+
       //remove order of the list if needed
       if(status == COCOBOT_TRAJECTORY_ORDER_DONE)
       {
@@ -675,6 +693,7 @@ void cocobot_trajectory_task(void * arg)
     else if(result == COCOBOT_TRAJECTORY_RUNNING)
     {
       result = COCOBOT_TRAJECTORY_SUCCESS;
+      xEventGroupSetBits(no_more_orders, BIT_0);
     }
 
     //wait 100ms
@@ -692,6 +711,9 @@ void cocobot_trajectory_init(unsigned int task_priority)
 
   //create mutex
   mutex = xSemaphoreCreateMutex();
+  
+  //create event
+  no_more_orders = xEventGroupCreate();
 
   //init handle generator
   last_handle = 0;
@@ -731,6 +753,7 @@ void cocobot_add_new_order(cocobot_trajectory_order_t * order)
   estimations_need_recompute = 1;
 
   xSemaphoreGive(mutex);
+  xEventGroupClearBits(no_more_orders, BIT_0);
 }
 
 cocobot_trajectory_handle_t cocobot_trajectory_goto_d(float distance, float time)
@@ -841,7 +864,10 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_circle_backward(float xc,
 
 cocobot_trajectory_result_t cocobot_trajectory_wait(void)
 {
-  while(result == COCOBOT_TRAJECTORY_RUNNING);
+  while(result == COCOBOT_TRAJECTORY_RUNNING)
+  {
+    xEventGroupWaitBits(no_more_orders, BIT_0, pdFALSE, pdFALSE, 100 / portTICK_PERIOD_MS); 
+  }
 
   return result;
 }
@@ -858,7 +884,7 @@ int cocobot_trajectory_handle_console(char * command)
       cocobot_trajectory_order_t * order = NULL;
 
       xSemaphoreTake(mutex, portMAX_DELAY);
-      if(opost != order_list_write)
+      if(opost != (int)order_list_write)
       {
         order = &order_list[opost];
       }

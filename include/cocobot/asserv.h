@@ -33,6 +33,12 @@ void cocobot_asserv_set_angular_set_point(float angular);
  */
 void cocobot_asserv_set_state(cocobot_asserv_state_t state);
 
+/* Get the asserv of the asserv
+ * Return:
+ *  - cocobot_asserv_state_t value (COCOBOT_ASSERV_DISABLE or COCOBOT_ASSERV_ENABLE)
+ */
+cocobot_asserv_state_t cocobot_asserv_get_state(void);
+
 /* Handle console user command related to asserv module
  * Argument:
  *  - command: requested command
@@ -45,5 +51,11 @@ int cocobot_asserv_handle_console(char * command);
 /* Send asynchronously debug informations if user has requested them
  */
 void cocobot_asserv_handle_async_console(void);
+
+/* Get the linear speed of the robot (assumpe acceleration is inifite)
+ * Return:
+ *  - the linear speed in mm/ms
+ */
+float cocobot_asserv_get_linear_speed(void);
 
 #endif// COCOBOT_ASSERV_H

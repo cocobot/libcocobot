@@ -1,7 +1,7 @@
 #ifndef COCOBOT_TRAJECTORY_H
 #define COCOBOT_TRAJECTORY_H
 
-#define COCOBOT_TRAJECTORY_UNLIMITED_TIME (-1f)
+#define COCOBOT_TRAJECTORY_UNLIMITED_TIME (-1.0f)
 #define COCOBOT_TRAJECTORY_INVALID_HANDLE (-1)
 
 /* Type for storage of order unique handle */

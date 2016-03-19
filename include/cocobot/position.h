@@ -70,5 +70,23 @@ int cocobot_position_handle_console(char * command);
  */
 void cocobot_position_handle_async_console(void);
 
+/* Set the X coord
+ * Argument:
+ *  x: new X coord of the robot in mm
+ */
+void cocobot_position_set_x(float x);
+
+/* Set the Y coord
+ * Argument:
+ *  y: new Y coord of the robot in mm
+ */
+void cocobot_position_set_y(float y);
+
+/* Set the angle value
+ * Argument:
+ *  angle: new angle value of the robot in deg
+ */
+void cocobot_position_set_angle(float angle);
+
 
 #endif// COCOBOT_POSITION_H
