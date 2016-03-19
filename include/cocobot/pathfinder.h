@@ -5,8 +5,8 @@
 
 /**
  * A point on the table
- * x in mm
- * y in mm
+ * x in cm
+ * y in cm
  * 
  *   ___x___
  * y|       |

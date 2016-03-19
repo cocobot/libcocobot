@@ -2,8 +2,8 @@
 #include <math.h>
 #include "cocobot/pathfinder_internal.h"
 
-static cocobot_node_s* g_startNode;
-static cocobot_node_s* g_targetNode;
+static cocobot_node_s g_start_node;
+static cocobot_node_s g_target_node;
 
 void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
 {
@@ -119,72 +119,15 @@ list_s* getPath(cocobot_node_s*_p_finalNode, cocobot_node_s** p_table)
 {
     //TRACE_DEBUG("x=%d y=%d\n",_p_finalNode->x, _p_finalNode->y);
     list_s* finalTraj = NULL;
-    while((_p_finalNode->x !=  g_startNode->x) || (_p_finalNode->y != g_startNode->y))
-    {
-        //TRACE_DEBUG("px= %d, py= %d\n", _p_finalNode->pX, _p_finalNode->pY);
-        _p_finalNode->nodeType = FINAL_TRAJ; 
-        addToList(&finalTraj, _p_finalNode);
-        _p_finalNode = &p_table[_p_finalNode->pX][_p_finalNode->pY];
+    //while((_p_finalNode->x !=  g_startNode->x) || (_p_finalNode->y != g_startNode->y))
+    //{
+    //    //TRACE_DEBUG("px= %d, py= %d\n", _p_finalNode->pX, _p_finalNode->pY);
+    //    _p_finalNode->nodeType = FINAL_TRAJ; 
+    //    addToList(&finalTraj, _p_finalNode);
+    //    _p_finalNode = &p_table[_p_finalNode->pX][_p_finalNode->pY];
 
-    }
-    _p_finalNode->nodeType = FINAL_TRAJ; 
+    //}
+    //_p_finalNode->nodeType = FINAL_TRAJ; 
     return finalTraj;
 }
 
-uint8_t setStartNode(cocobot_node_s** _p_table, uint16_t _x, uint16_t _y)
-{
-    uint8_t xGrid, yGrid;
-    //Test if start node is on the table and convert it on the grid
-    if((_x >= 0) && (_x <= (TABLE_LENGTH - 1)))
-    {
-        if((_y >= 0) && (_y <= (TABLE_WIDTH -1)))
-        {
-            xGrid = _x/GRID_SIZE;   
-            yGrid = _y/GRID_SIZE;
-        }
-        else
-            return 2;
-    }
-    else
-        return 2;
-
-    if(_p_table[xGrid][yGrid].nodeType != OBSTACLE)
-    {
-        g_startNode = &_p_table[xGrid][yGrid];
-        return 0;
-    }
-    else
-    {
-        //TRACE_ERR("Starting point is an obstacle");
-        return 1;
-    }
-}
-
-uint8_t setTargetNode(cocobot_node_s** _p_table, uint16_t _x, uint16_t _y)
-{
-    uint8_t xGrid, yGrid;
-    //Test if start node is on the table and convert it on the grid
-    if((_x >= 0) && (_x <= (TABLE_LENGTH - 1)))
-    {
-        if((_y >= 0) && (_y <= (TABLE_WIDTH -1)))
-        {
-            xGrid = _x/GRID_SIZE;   
-            yGrid = _y/GRID_SIZE;
-        }
-        else
-            return 2;
-    }
-    else
-        return 2;
-
-    if(_p_table[xGrid][yGrid].nodeType != OBSTACLE)
-    {
-        g_targetNode = &_p_table[xGrid][yGrid];
-        return 0;
-    }
-    else
-    {
-        //printf("Target point is an obstacle");
-        return 1;
-    }
-}

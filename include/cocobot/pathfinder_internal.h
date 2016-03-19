@@ -17,7 +17,5 @@ float cocobot_get_distance(cocobot_node_s *_p_source, cocobot_node_s *_p_dest);
 int removeFromList(list_s* _p_list, cocobot_node_s* _p_node);
 void addToList(list_s** _p_list, cocobot_node_s* _p_node);
 list_s* getPath(cocobot_node_s*_p_finalNode, cocobot_node_s** p_table);
-uint8_t setStartNode(cocobot_node_s** _p_table, uint16_t _x, uint16_t _y);
-uint8_t setTargetNode(cocobot_node_s** _p_table, uint16_t _x, uint16_t _y);
 
 #endif  //COCOBOT_PATHFINDER_INTERNAL_H
