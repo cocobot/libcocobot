@@ -9,7 +9,7 @@ static cocobot_node_s g_table[TABLE_LENGTH/GRID_SIZE][TABLE_WIDTH/GRID_SIZE];
 cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_point_s target_point)
 {
     cocobot_console_send_asynchronous("DEBUG", "Started");
-    initialiseTable(g_table, TABLE_LENGTH/GRID_SIZE, TABLE_WIDTH/GRID_SIZE);
+    cocobot_pathfinder_initialise_table(g_table, TABLE_LENGTH/GRID_SIZE, TABLE_WIDTH/GRID_SIZE);
     cocobot_trajectory_s toto;
     toto.execution_time = 0;
     //Open list
@@ -24,7 +24,7 @@ cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_
     cocobot_pathfinder_set_target_node(target_node);
 
     cocobot_node_s* p_currentNode = start_node;
-    p_currentNode->cost = cocobot_get_distance(p_currentNode, target_node);
+    p_currentNode->cost = cocobot_pathfinder_get_distance(p_currentNode, target_node);
 
     while(p_currentNode != target_node)
     {
@@ -45,7 +45,7 @@ cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_
         {
             p_openList->p_node->nodeType = CLOSED_LIST;
             p_currentNode = p_openList->p_node;
-            removeFromList(p_openList, p_openList->p_node);
+            cocobot_pathfinder_remove_from_list(p_openList, p_openList->p_node);
         }
         else
         {
@@ -54,7 +54,7 @@ cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_
         }
     }
     
-    getPath(p_currentNode, g_table);
+    cocobot_pathfinder_get_path(p_currentNode, g_table);
     return toto;
 }
 

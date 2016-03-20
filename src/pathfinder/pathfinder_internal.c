@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <cocobot.h>
 #include "cocobot/pathfinder_internal.h"
 
 //static cocobot_node_s g_start_node;
@@ -16,17 +17,17 @@ void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, c
         node->pX = parent_node->x;
         node->pY = parent_node->y;
         node->nodeType = OPEN_LIST;
-        node->cost = (parent_node->cost - cocobot_get_distance(parent_node, &g_target_node)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, &g_target_node);
-        addToList(open_list, node);
+        node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
+        cocobot_pathfinder_add_to_list(open_list, node);
     }
     else if(node->nodeType == OPEN_LIST)
     {
-        if((parent_node->cost - cocobot_get_distance(parent_node, &g_target_node)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, &g_target_node) < node->cost)
+        if((parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node) < node->cost)
         {
-            node->cost = (parent_node->cost - cocobot_get_distance(parent_node, &g_target_node)) + cocobot_get_distance(parent_node, node) + cocobot_get_distance(node, &g_target_node);
+            node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
             node->pX = parent_node->x;
             node->pY = parent_node->y;
-            addToList(open_list, node);
+            cocobot_pathfinder_add_to_list(open_list, node);
         }
     }
     else
@@ -35,29 +36,29 @@ void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, c
     }
 }
 
-float cocobot_get_distance(cocobot_node_s *_p_source, cocobot_node_s *_p_dest)
+float cocobot_pathfinder_get_distance(cocobot_node_s *source, cocobot_node_s *dest)
 {
-    return sqrt((_p_dest->y - _p_source->y)*(_p_dest->y - _p_source->y) + (_p_dest->x - _p_source->x)*(_p_dest->x - _p_source->x));
+    return sqrt((dest->y - source->y)*(dest->y - source->y) + (dest->x - source->x)*(dest->x - source->x));
 }
 
-void addToList(list_s** _p_list, cocobot_node_s* _p_node)
+void cocobot_pathfinder_add_to_list(list_s **list, cocobot_node_s *node)
 {
     //New element is created
     list_s* p_newElement = malloc(sizeof(list_s));
-    p_newElement->p_node = _p_node;
+    p_newElement->p_node = node;
     p_newElement->p_nextElement = NULL;
     
     //If the list is empty
-    //printf("cout: %d\n", _p_node->cost);
-    if(*_p_list == NULL)
+    //printf("cout: %d\n", node->cost);
+    if(*list == NULL)
     {
-        *_p_list = p_newElement;
+        *list = p_newElement;
     }
     else
     {
-        list_s* p_tmp = *_p_list;
+        list_s* p_tmp = *list;
         list_s* p_prec = NULL;
-        while(_p_node->cost > p_tmp->p_node->cost)
+        while(node->cost > p_tmp->p_node->cost)
         {
             // printf("cout: %d\n", p_tmp->p_node->cost);
             //getchar();
@@ -71,8 +72,8 @@ void addToList(list_s** _p_list, cocobot_node_s* _p_node)
         //First element of the list
         if(p_prec == NULL)
         {
-            p_newElement->p_nextElement = *_p_list;
-            *_p_list = p_newElement;
+            p_newElement->p_nextElement = *list;
+            *list = p_newElement;
         }
         else
         {
@@ -82,18 +83,18 @@ void addToList(list_s** _p_list, cocobot_node_s* _p_node)
     }
 }
 
-int removeFromList(list_s* _p_list, cocobot_node_s* _p_node)
+int cocobot_pathfinder_remove_from_list(list_s *list, cocobot_node_s *node)
 {
-    if(_p_list == NULL)
+    if(list == NULL)
     {
         //printf("List is empty");
         return -1;
     }
     else
     {
-        list_s* p_tmp = _p_list;
+        list_s* p_tmp = list;
         list_s* p_prec = NULL;
-        while((p_tmp->p_node->x != _p_node->x) && (p_tmp->p_node->y != _p_node->y))
+        while((p_tmp->p_node->x != node->x) && (p_tmp->p_node->y != node->y))
         {
             if(p_tmp->p_nextElement != NULL)
             {
@@ -112,8 +113,8 @@ int removeFromList(list_s* _p_list, cocobot_node_s* _p_node)
         }
         else
         {
-            _p_list->p_node = p_tmp->p_nextElement->p_node;
-            _p_list->p_nextElement = p_tmp->p_nextElement->p_nextElement;
+            list->p_node = p_tmp->p_nextElement->p_node;
+            list->p_nextElement = p_tmp->p_nextElement->p_nextElement;
         }
         //free(p_tmp);
     }
@@ -130,22 +131,22 @@ void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node)
     memcpy(&g_start_node, start_node, sizeof(cocobot_node_s));
 }
 
-list_s* getPath(cocobot_node_s *_p_finalNode, cocobot_node_s p_table[][TABLE_WIDTH/GRID_SIZE])
+list_s* cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
 {
-    //TRACE_DEBUG("x=%d y=%d\n",_p_finalNode->x, _p_finalNode->y);
-    //printf("%p, %p", _p_finalNode,p_table);
+    //TRACE_DEBUG("x=%d y=%d\n",final_node->x, final_node->y);
+    //printf("%p, %p", final_node,table);
     list_s* finalTraj = NULL;
-    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", _p_finalNode->x, _p_finalNode->y);
-    while((_p_finalNode->x !=  g_start_node.x) || (_p_finalNode->y != g_start_node.y))
+    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", final_node->x, final_node->y);
+    while((final_node->x !=  g_start_node.x) || (final_node->y != g_start_node.y))
     {
-        cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", _p_finalNode->pX, _p_finalNode->pY);
-        //_p_finalNode->nodeType = FINAL_TRAJ; 
-        //addToList(&finalTraj, _p_finalNode);
-        _p_finalNode = &p_table[_p_finalNode->pX][_p_finalNode->pY];
+        cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", final_node->pX, final_node->pY);
+        //final_node->nodeType = FINAL_TRAJ; 
+        //cocobot_pathfinder_add_to_list(&finalTraj, final_node);
+        final_node = &table[final_node->pX][final_node->pY];
 
     }
-    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", _p_finalNode->x, _p_finalNode->y);
-    _p_finalNode->nodeType = FINAL_TRAJ; 
+    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", final_node->x, final_node->y);
+    final_node->nodeType = FINAL_TRAJ; 
     return finalTraj;
 }
 

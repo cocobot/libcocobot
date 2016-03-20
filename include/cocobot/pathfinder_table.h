@@ -36,10 +36,50 @@ struct list
     list_s* p_nextElement;
 };
 
-//Table related functions
-void initialiseTable(cocobot_node_s _table[][TABLE_WIDTH/GRID_SIZE], int _length, int _width);
-void setPoint(cocobot_node_s _p_table[][TABLE_WIDTH/GRID_SIZE], int _x, int _y, cocobot_nodeType_e _nodeType);
-void setRectangle(cocobot_node_s _p_table[][TABLE_WIDTH/GRID_SIZE], int _xDimension, int _yDimension, int _xPosition, int _yPosition, cocobot_nodeType_e _nodeType);
-void setCircle(cocobot_node_s _p_table[][TABLE_WIDTH/GRID_SIZE], int _xCenter, int _yCenter, int _radius, cocobot_nodeType_e _nodeType);
+/**
+ * Initialize the table used for a*
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - length : length of the table
+ *  - width : width of the table
+ *  
+ */
+void cocobot_pathfinder_initialise_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int length, int width);
+
+/**
+ * Set a point on the table
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x coordinate of the point
+ *  - y : y coordinate of the point
+ *  - node_type : node_type wanted for the point
+ *  
+ */
+void cocobot_pathfinder_set_point(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type);
+
+/**
+ * Set a rectangle on the table of the same nodetype
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x_dimension : x dimension of the rectangle
+ *  - y_dimension : y dimension of the rectangle
+ *  - x_position : x position of the rectangle (x correspond to the smaller x coordinate of the rectangle)
+ *  - y_position : y position of the rectangle (y correspond to the smaller y coordinate of the rectangle)
+ *  - node_type : node_type wanted for the rectangle
+ *  
+ */
+void cocobot_pathfinder_set_rectangle(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_dimension, int y_dimension, int x_position, int y_position, cocobot_nodeType_e node_type);
+
+/**
+ * Set a circle on the table of the same nodetype
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x_center : x coordinate of the center of the circle
+ *  - y_center : y coordinate of the center of the circle
+ *  - radius : radius of the circle
+ *  - node_type : node_type wanted for the point
+ *  
+ */
+void cocobot_pathfinder_set_circle(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_center, int y_center, int radius, cocobot_nodeType_e node_type);
 
 #endif //COCOBOT_PATHFINDER_TABLE_H
