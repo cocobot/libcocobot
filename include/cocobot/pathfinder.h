@@ -3,6 +3,11 @@
 
 #include "cocobot/pathfinder_table.h"
 
+#define NO_TRAJECTORY_AVAILABLE -1
+#define TRAJECTORY_AVAILABLE 0
+
+#define TRAJECTORY_NBR_POINTS_MAX 160
+
 /**
  * A point on the table
  * x in cm
@@ -22,7 +27,9 @@ typedef struct
 //TODO
 typedef struct
 {
-    uint16_t execution_time;
+    cocobot_point_s trajectory[TRAJECTORY_NBR_POINTS_MAX]; //TODO:Adjust number of points
+    uint8_t nbr_points; // Number of points in the trajectory
+    uint16_t execution_time; // ms?
 }cocobot_trajectory_s;
 
 
@@ -30,10 +37,13 @@ typedef struct
  * Get path from starting_point to target point
  * Arguments:
  *  - starting_point: trajectory starting point
- *  - target_point: trajectory target point 
+ *  - target_point: trajectory target point
+ *  - trajectory : pointer on the final trajectory 
  *  
- * Return Value: cocobot_strategy_t : contains the trajectory
+ * Return Value: either NO_TRAJECTORY_AVAILABLE or TRAJECTORY_OK
  */
-cocobot_trajectory_s cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_point_s target_point);
+char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_point_s target_point, cocobot_trajectory_s *trajectory);
+
+
 
 #endif //COCOBOT_PATHFINDER_H

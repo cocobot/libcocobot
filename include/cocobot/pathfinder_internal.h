@@ -2,6 +2,8 @@
 #define COCOBOT_PATHFINDER_INTERNAL_H
 
 #include "cocobot/pathfinder_table.h"
+#include "cocobot/pathfinder.h"
+
 /**
  * Compute a node of the table
  * Arguments:
@@ -65,8 +67,25 @@ void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node);
  * Arguments:
  *  - final_node : pointer on final node of the path
  *  - table : table used for computing
+ *  - trajectory : pointer on the structure of the final trajectory
  *  
  */
-list_s* cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
+void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s *trajectory);
+
+/**
+ * Convert a table node into a point containing real coordonates
+ * Arguments:
+ *  - node : pointer on node to be translated
+ *
+ * Return value: real coordonates point
+ */
+cocobot_point_s cocobot_pathfinder_get_point_from_node(cocobot_node_s *node);
+
+/**
+ * Initialise struct containing trajectory
+ * Arguments:
+ *  - trajectory : pointer on the struct to initialise
+ */
+void cocobot_pathfinder_init_trajectory(cocobot_trajectory_s *trajectory);
 
 #endif  //COCOBOT_PATHFINDER_INTERNAL_H

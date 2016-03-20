@@ -131,22 +131,43 @@ void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node)
     memcpy(&g_start_node, start_node, sizeof(cocobot_node_s));
 }
 
-list_s* cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
+void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s* trajectory)
 {
-    //TRACE_DEBUG("x=%d y=%d\n",final_node->x, final_node->y);
-    //printf("%p, %p", final_node,table);
-    list_s* finalTraj = NULL;
-    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", final_node->x, final_node->y);
+    //cocobot_console_send_asynchronous("PATH","x= %d, y= %d", final_node->x, final_node->y);
     while((final_node->x !=  g_start_node.x) || (final_node->y != g_start_node.y))
     {
-        cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", final_node->pX, final_node->pY);
-        //final_node->nodeType = FINAL_TRAJ; 
-        //cocobot_pathfinder_add_to_list(&finalTraj, final_node);
+        cocobot_console_send_asynchronous("PATH","x= %d, y= %d", final_node->x, final_node->y);
+        //fill trajectory beginning by the end
+        trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
+        trajectory->nbr_points++;
         final_node = &table[final_node->pX][final_node->pY];
-
     }
-    cocobot_console_send_asynchronous("PATH","x= %d, y= %d\n", final_node->x, final_node->y);
-    final_node->nodeType = FINAL_TRAJ; 
-    return finalTraj;
+    cocobot_console_send_asynchronous("PATH","x= %d, y= %d", final_node->x, final_node->y);
+    //last point
+    trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
+    trajectory->nbr_points++;
+    
+    //put the trajectory at the begining of the array using memcpy if possible, memmove otherwise
+    if(trajectory->nbr_points <= (TRAJECTORY_NBR_POINTS_MAX / 2))
+        memcpy(trajectory->trajectory, &trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - trajectory->nbr_points], trajectory->nbr_points * sizeof(cocobot_point_s));
+    else
+        memmove(trajectory->trajectory, &trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - trajectory->nbr_points], trajectory->nbr_points * sizeof(cocobot_point_s));
+
+    //TODO : get execution_time
+    trajectory->execution_time = 0;
 }
 
+cocobot_point_s cocobot_pathfinder_get_point_from_node(cocobot_node_s *node)
+{
+    cocobot_point_s _point;
+    _point.x = node->x * GRID_SIZE + GRID_SIZE/2;
+    _point.y = node->y * GRID_SIZE + GRID_SIZE/2;
+    return _point;
+}
+
+void cocobot_pathfinder_init_trajectory(cocobot_trajectory_s *trajectory)
+{
+    trajectory->execution_time = 0;
+    trajectory->nbr_points = 0;
+    memset(trajectory->trajectory, 0, TRAJECTORY_NBR_POINTS_MAX*sizeof(cocobot_point_s));
+}
