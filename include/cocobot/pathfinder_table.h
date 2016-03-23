@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-#define TABLE_LENGTH 300
-#define TABLE_WIDTH 200
-#define GRID_SIZE 5
+#define TABLE_LENGTH 3000
+#define TABLE_WIDTH 2000
+#define GRID_SIZE 50
 
 typedef enum
 {

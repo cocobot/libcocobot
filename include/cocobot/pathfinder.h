@@ -10,8 +10,8 @@
 
 /**
  * A point on the table
- * x in cm
- * y in cm
+ * x in mm
+ * y in mm
  * 
  *   ___x___
  * y|       |
