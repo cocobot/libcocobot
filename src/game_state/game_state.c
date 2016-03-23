@@ -36,6 +36,7 @@ void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action)
   _color = rand() % 2; 
 #else
   //TODO: impl me
+  _color = COCOBOT_GAME_STATE_COLOR_NEG;
 #endif
 
   //create 90s timer
