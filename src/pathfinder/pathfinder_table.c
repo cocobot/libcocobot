@@ -16,16 +16,16 @@ void cocobot_pathfinder_initialise_table(cocobot_node_s table[][TABLE_WIDTH/GRID
     }
 
     // ARound the dune
-    cocobot_pathfinder_set_rectangle(table, 2/GRID_SIZE, 20/GRID_SIZE, 80/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
-    cocobot_pathfinder_set_rectangle(table, 2/GRID_SIZE, 20/GRID_SIZE, 220/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, 20/GRID_SIZE, 200/GRID_SIZE, 800/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, 20/GRID_SIZE, 200/GRID_SIZE, 2200/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
     
     //Central T (construction area)
-    cocobot_pathfinder_set_rectangle(table, 120/GRID_SIZE, 2/GRID_SIZE, 90/GRID_SIZE, 75/GRID_SIZE, OBSTACLE);
-    cocobot_pathfinder_set_rectangle(table, 6/GRID_SIZE, 60/GRID_SIZE, 147/GRID_SIZE, 75/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, 1200/GRID_SIZE, 20/GRID_SIZE, 900/GRID_SIZE, 750/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, 60/GRID_SIZE, 600/GRID_SIZE, 1470/GRID_SIZE, 750/GRID_SIZE, OBSTACLE);
     
     //iles
-    cocobot_pathfinder_set_circle(table, 0/GRID_SIZE, 199/GRID_SIZE, 25/GRID_SIZE, OBSTACLE); 
-    cocobot_pathfinder_set_circle(table, 299/GRID_SIZE, 199/GRID_SIZE, 25/GRID_SIZE, OBSTACLE); 
+    cocobot_pathfinder_set_circle(table, 0/GRID_SIZE, 1990/GRID_SIZE, 250/GRID_SIZE, OBSTACLE); 
+    cocobot_pathfinder_set_circle(table, 2990/GRID_SIZE, 1990/GRID_SIZE, 250/GRID_SIZE, OBSTACLE); 
 }
 
 void cocobot_pathfinder_set_point(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type)
