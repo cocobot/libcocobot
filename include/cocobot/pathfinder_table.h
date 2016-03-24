@@ -5,6 +5,7 @@
 
 #define TABLE_LENGTH 3000
 #define TABLE_WIDTH 2000
+#define MAXIMUM_NODE_IN_LIST 200
 #define GRID_SIZE 50
 
 typedef enum
@@ -28,13 +29,15 @@ typedef struct
 }cocobot_node_s;
 
 
-typedef struct list list_s;
-
-struct list
+/**
+ * cocobot_list_t is a sorted list (using the node of each node
+ * table[0] is the node of the list with the smallest cost
+ */
+typedef struct
 {
-    cocobot_node_s* p_node;
-    list_s* p_nextElement;
-};
+    cocobot_node_s table[MAXIMUM_NODE_IN_LIST];//Arbitrary chosen value
+    uint8_t nb_elements;
+} cocobot_list_s;
 
 /**
  * Initialize the table used for a*

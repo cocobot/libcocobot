@@ -9,7 +9,7 @@
 static cocobot_node_s g_target_node;
 static cocobot_node_s g_start_node;
 
-void cocobot_pathfinder_compute_node(list_s** open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
+void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
 {
     //printf("Node type = %d\n", node->nodeType);//Do nothing for all other cases
     if(node->nodeType == NEW_NODE)
@@ -41,82 +41,70 @@ float cocobot_pathfinder_get_distance(cocobot_node_s *source, cocobot_node_s *de
     return sqrt((dest->y - source->y)*(dest->y - source->y) + (dest->x - source->x)*(dest->x - source->x));
 }
 
-void cocobot_pathfinder_add_to_list(list_s **list, cocobot_node_s *node)
+void cocobot_pathfinder_initialize_list(cocobot_list_s *list)
 {
-    //New element is created
-    list_s* p_newElement = malloc(sizeof(list_s));
-    p_newElement->p_node = node;
-    p_newElement->p_nextElement = NULL;
-    
-    //If the list is empty
+    list->nb_elements = 0;
+    //in theory, not usefull 
+    memset(list, 0, sizeof(cocobot_list_s));
+}
+
+void cocobot_pathfinder_add_to_list(cocobot_list_s *list, cocobot_node_s *node)
+{
     //printf("cout: %d\n", node->cost);
-    if(*list == NULL)
+    //If the list is empty
+    if(list->nb_elements == 0)
     {
-        *list = p_newElement;
+        memcpy(&list->table[0], node, sizeof(cocobot_node_s));
     }
     else
     {
-        list_s* p_tmp = *list;
-        list_s* p_prec = NULL;
-        while(node->cost > p_tmp->p_node->cost)
+        int index = 0;
+        //find its position in the list
+        while(node->cost > list->table[index].cost)
         {
-            // printf("cout: %d\n", p_tmp->p_node->cost);
-            //getchar();
-            p_prec = p_tmp;
-            p_tmp = p_tmp->p_nextElement;
-            if(p_tmp == NULL)
-            {
+            index++;
+            if(index == list->nb_elements)
                 break;
-            }
         }
-        //First element of the list
-        if(p_prec == NULL)
+        //if the list is not full
+        if(index < MAXIMUM_NODE_IN_LIST)
         {
-            p_newElement->p_nextElement = *list;
-            *list = p_newElement;
+            memmove(&list->table[index+1], &list->table[index], (list->nb_elements - index) * sizeof(cocobot_node_s));
+            memmove(&list->table[index], node, sizeof(cocobot_node_s));
         }
         else
         {
-            p_prec->p_nextElement = p_newElement;
-            p_newElement->p_nextElement = p_tmp; 
+            ;
+            //TBD
+            //Cost is to big, not added in list --> not supposed to happen, take a list size big enough
         }
     }
+    list->nb_elements++;
 }
 
-int cocobot_pathfinder_remove_from_list(list_s *list, cocobot_node_s *node)
+int cocobot_pathfinder_remove_from_list(cocobot_list_s *list, cocobot_node_s *node)
 {
-    if(list == NULL)
+    if(list->nb_elements == 0)
     {
         //printf("List is empty");
         return -1;
     }
     else
     {
-        list_s* p_tmp = list;
-        list_s* p_prec = NULL;
-        while((p_tmp->p_node->x != node->x) && (p_tmp->p_node->y != node->y))
+        int index = 0;
+        while((list->table[index].x != node->x) && (list->table[index].y != node->y))
         {
-            if(p_tmp->p_nextElement != NULL)
-            {
-                p_prec = p_tmp;
-                p_tmp = p_tmp->p_nextElement; 
-            }
-            else
-            {
-                //printf("Element not in the list\n");
+            index++;
+            if(index == list->nb_elements)
                 return -2;
-            }
         }
-        if(p_prec != NULL)
-        {
-            p_prec->p_nextElement = p_tmp->p_nextElement;
-        }
+        if(index != (MAXIMUM_NODE_IN_LIST - 1))
+            memmove(&list->table[index], &list->table[index+1], (list->nb_elements - index - 1) * sizeof(cocobot_node_s));
         else
         {
-            list->p_node = p_tmp->p_nextElement->p_node;
-            list->p_nextElement = p_tmp->p_nextElement->p_nextElement;
+            ; //Nothing to do
         }
-        //free(p_tmp);
+        list->nb_elements--;
     }
     return 0;
 }

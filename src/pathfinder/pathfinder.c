@@ -4,7 +4,7 @@
 #include "cocobot/pathfinder_table.h"
 
 static cocobot_node_s g_table[TABLE_LENGTH/GRID_SIZE][TABLE_WIDTH/GRID_SIZE];
-//static cocobot_node_s* g_head_openList;
+static cocobot_list_s open_list;
 
 char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_point_s target_point, cocobot_trajectory_s *trajectory)
 {
@@ -13,9 +13,8 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
     cocobot_console_send_asynchronous("DEBUG", "Started");
     
     cocobot_pathfinder_initialise_table(g_table, TABLE_LENGTH/GRID_SIZE, TABLE_WIDTH/GRID_SIZE);
+    cocobot_pathfinder_initialize_list(&open_list);
     cocobot_pathfinder_init_trajectory(trajectory);
-    //Open list
-    list_s* p_openList = NULL;
    
     //start_node
     cocobot_node_s* start_node = &g_table[starting_point.x/GRID_SIZE][starting_point.y/GRID_SIZE];
@@ -39,15 +38,17 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
                 //cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d\n", i, j);
                 if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != p_currentNode->x) || (j!=p_currentNode->y)))
                 {
-                    cocobot_pathfinder_compute_node(&p_openList, &g_table[i][j], p_currentNode);
+                    cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], p_currentNode);
                 }
             }
         }
-        if(p_openList->p_node != NULL)
+        //open_list is not null
+        if(open_list.nb_elements != NULL)
         {
-            p_openList->p_node->nodeType = CLOSED_LIST;
-            p_currentNode = p_openList->p_node;
-            cocobot_pathfinder_remove_from_list(p_openList, p_openList->p_node);
+            //get first of the list
+            open_list.table[0].nodeType = CLOSED_LIST;
+            p_currentNode = &open_list.table[0];
+            cocobot_pathfinder_remove_from_list(&open_list, &open_list.table[0]);
         }
         else
         {
