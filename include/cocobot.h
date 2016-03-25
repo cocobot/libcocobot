@@ -11,5 +11,6 @@
 #include <cocobot/asserv.h>
 #include <cocobot/action_scheduler.h>
 #include <cocobot/game_state.h>
+#include <cocobot/opponent_detection.h>
 
 #endif// COCOBOT_H
