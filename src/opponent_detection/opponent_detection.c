@@ -1,4 +1,7 @@
+#include <FreeRTOS.h>
+#include <task.h>
 #include <cocobot.h>
+#include <platform.h>
 
 #define COCOBOT_OPPONENT_DETECTION_USIR_FRONT_LEFT 0
 #define COCOBOT_OPPONENT_DETECTION_USIR_FRONT_RIGHT 1
@@ -23,9 +26,35 @@ typedef struct
 static cocobot_opponent_detection_usir_t _usirs[4];
 static cocobot_opponent_detection_fake_robot_t _fakebot;
 
+void cocobot_opponent_detection_task(void * arg)
+{
+  //arg is always NULL. Prevent "variable unused" warning
+  (void)arg;
+
+  TickType_t xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while(1)
+  {
+    int i;
+    for(i = 0; i < 4; i += 1)
+    {
+      platform_us_send_trig(i);
+      vTaskDelay(15 / portTICK_PERIOD_MS);
+      platform_us_reset_trig(i);
+      float adc_mV = platform_adc_get_mV(PLATFORM_ADC_IR0 + i);
+      _usirs[i].ir = adc_mV;
+      _usirs[i].us = platform_us_get_value(i);
+    }
+
+    //wait 100ms
+    vTaskDelayUntil( &xLastWakeTime, 50 / portTICK_PERIOD_MS);
+  }
+}
+
 void cocobot_opponent_detection_init(unsigned int task_priority)
 {
-  //(void)task_priority;
+  (void)task_priority;
+
   int i;
   for(i = 0; i < 4; i += 1)
   {
@@ -38,6 +67,9 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
   _fakebot.x = 0;
   _fakebot.y = 0;
   _fakebot.activated = COCOBOT_OPPONENT_DETECTION_DEACTIVATED;
+
+  //start task
+  xTaskCreate(cocobot_opponent_detection_task, "opponent", 200, NULL, task_priority, NULL);
 }
 
 int cocobot_opponent_detection_handle_console(char * command)
@@ -72,7 +104,7 @@ int cocobot_opponent_detection_handle_console(char * command)
       }
     }
 
-    cocobot_console_send_answer("%d %f %f", _fakebot.activated, _fakebot.x, _fakebot.y);
+    cocobot_console_send_answer("%d %f %f", _fakebot.activated, (double)_fakebot.x, (double)_fakebot.y);
     return 1;
   }
 
