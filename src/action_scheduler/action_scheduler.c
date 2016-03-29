@@ -161,7 +161,9 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 static void cocobot_action_scheduler_goto(cocobot_action_t * action)
 {
   cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
-  cocobot_trajectory_goto_a(action->pos.a, -1);
+  if (action->pos.a != NAN) {
+    cocobot_trajectory_goto_a(action->pos.a, -1);
+  }
   cocobot_trajectory_wait();
 }
 

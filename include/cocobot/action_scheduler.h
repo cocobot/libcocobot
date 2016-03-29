@@ -44,7 +44,9 @@ void cocobot_action_scheduler_start(void);
 /* Add a new action to the scheduler
  * Argument:
  *  - score:          points given when action succeed
- *  - x, y, a:        position (mm) and angle (deg), relatively to the table, to start the action
+ *  - x, y, a:        position (mm) and angle (deg), relatively to the table,
+ *  to start the action. The angle value is optional and can be replaced by
+ *  NAN defined in math.h if it should not be used.
  *  - execution_time: time needed to guarantee the action's full execution (in ms)
  *  - success_proba:  probability that the action succeed when doing it (between 0 and 1)
  *  - callback:       function to call when action should be executed
