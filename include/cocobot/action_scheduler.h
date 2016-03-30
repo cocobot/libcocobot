@@ -43,17 +43,25 @@ void cocobot_action_scheduler_start(void);
 
 /* Add a new action to the scheduler
  * Argument:
- *  - score:          points given when action succeed
- *  - x, y, a:        position (mm) and angle (deg), relatively to the table,
+ *  - score:            points given when action succeed
+ *  - x, y, a:          position (mm) and angle (deg), relatively to the table,
  *  to start the action. The angle value is optional and can be replaced by
- *  NAN defined in math.h if it should not be used.
- *  - execution_time: time needed to guarantee the action's full execution (in ms)
- *  - success_proba:  probability that the action succeed when doing it (between 0 and 1)
- *  - callback:       function to call when action should be executed
+ *  NAN defined in math.h if it should not be used
+ *  - execution_time:   time needed to guarantee the action's full execution (in ms)
+ *  - success_proba:    probability that the action succeed when doing it (between 0 and 1)
+ *  - preexec_callback: function to call when action before the robot moves to
+ *  the action (can be set to NULL if not needed)
+ *  - exec_callback:    function to call when action should be executed
+ *  - cleanup_callback: function always called at the end, even if a problem
+ *  occured and action could not be executed (can be set to NULL if not needed)
+ *  - callback_arg:     argument to be used with all callback functions
+ *  - unlocked:         function called to know if action is unlocked and can be
+ *  executed (can be set to NULL if action is always unlocked)
  */
 void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
     unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
-    action_callback callback, void * callback_arg, action_unlocked unlocked);
+    action_callback preexec_callback, action_callback exec_callback,
+    action_callback cleanup_callback, void * callback_arg, action_unlocked unlocked);
 
 /* Execute best remaining action based on game's state (selected strategy,
  * remaining time, distance, obstacles, ...)
