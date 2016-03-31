@@ -21,12 +21,12 @@ typedef enum
 
 typedef struct
 {
-    uint8_t x;
-    uint8_t y;
+    char x;
+    char y;
     uint8_t nodeType; //is a cocobot_nodeType_e cast in uint8_t to be sure of the size
     float cost;
-    uint8_t pX;
-    uint8_t pY;
+    char pX;
+    char pY;
 }cocobot_node_s;
 
 
