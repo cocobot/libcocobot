@@ -24,30 +24,30 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
     cocobot_node_s* target_node = &g_table[target_point.x/GRID_SIZE][target_point.y/GRID_SIZE];
     cocobot_pathfinder_set_target_node(target_node);
 
-    cocobot_node_s* p_currentNode = start_node;
-    p_currentNode->cost = cocobot_pathfinder_get_distance(p_currentNode, target_node);
+    cocobot_node_s current_node = *start_node;
+    current_node.cost = cocobot_pathfinder_get_distance(&current_node, target_node);
 
-    while(p_currentNode != target_node)
+    while((current_node.x != target_node->x) || (current_node.y != target_node->y))
     {
-        //cocobot_console_send_asynchronous("DEBUG","current node x=%d, y=%d \n", p_currentNode->x, p_currentNode->y);
+        //cocobot_console_send_asynchronous("DEBUG","current node x=%d, y=%d \n", current_node.x, current_node.y);
         //Treat adjacent node
-        for(int i=p_currentNode->x-1; i<=p_currentNode->x+1; i++)
+        for(int i=current_node.x-1; i<=current_node.x+1; i++)
         {
-            for(int j=p_currentNode->y-1; j<=p_currentNode->y+1; j++)
+            for(int j=current_node.y-1; j<=current_node.y+1; j++)
             {
                 //cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d\n", i, j);
-                if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != p_currentNode->x) || (j!=p_currentNode->y)))
+                if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != current_node.x) || (j!=current_node.y)))
                 {
-                    cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], p_currentNode);
+                    cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], &current_node);
                 }
             }
         }
         //open_list is not null
-        if(open_list.nb_elements != NULL)
+        if(open_list.nb_elements != 0)
         {
             //get first of the list
             open_list.table[0].nodeType = CLOSED_LIST;
-            p_currentNode = &open_list.table[0];
+            current_node = open_list.table[0];
             cocobot_pathfinder_remove_from_list(&open_list, &open_list.table[0]);
         }
         else
@@ -58,7 +58,7 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
         }
     }
     
-    cocobot_pathfinder_get_path(p_currentNode, g_table, trajectory);
+    cocobot_pathfinder_get_path(&current_node, g_table, trajectory);
     return _return_value;
 }
 
