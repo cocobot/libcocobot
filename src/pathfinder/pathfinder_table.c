@@ -73,7 +73,7 @@ void cocobot_pathfinder_set_circle(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]
     double xMax = 0.0;
     for(int y = y_center; y < y_center + radius; y++)
     {
-        xMax = sqrt((float)radius*(float)radius - (float)(y-y_center)*(float)(y-y_center));
+        xMax = sqrtf((float)radius*(float)radius - (float)(y-y_center)*(float)(y-y_center));
         //printf("x= %d, y= %d\n", (int)round(xMax), y);
         cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, x_center, y, node_type);
         cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, x_center - (int)round(xMax) , y, node_type);

@@ -39,7 +39,7 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
 
 float cocobot_pathfinder_get_distance(cocobot_node_s *source, cocobot_node_s *dest)
 {
-    return sqrt((dest->y - source->y)*(dest->y - source->y) + (dest->x - source->x)*(dest->x - source->x));
+    return sqrtf((dest->y - source->y)*(dest->y - source->y) + (dest->x - source->x)*(dest->x - source->x));
 }
 
 void cocobot_pathfinder_initialize_list(cocobot_list_s *list)
