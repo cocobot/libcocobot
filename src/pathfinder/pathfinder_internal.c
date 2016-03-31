@@ -27,6 +27,7 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
             node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
             node->pX = parent_node->x;
             node->pY = parent_node->y;
+            cocobot_pathfinder_remove_from_list(open_list, node);
             cocobot_pathfinder_add_to_list(open_list, node);
         }
     }

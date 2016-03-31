@@ -44,6 +44,12 @@ typedef struct
  */
 char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_point_s target_point, cocobot_trajectory_s *trajectory);
 
-
+/**
+ * Initialize the pathFinder
+ * Arguments : TBD 
+ *  - Maybe robot speed/acceleration
+ *  - robot dimensionc
+ */
+void cocobot_pathfinder_init();
 
 #endif //COCOBOT_PATHFINDER_H

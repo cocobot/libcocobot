@@ -7,15 +7,16 @@
 #define TABLE_WIDTH 2000
 #define MAXIMUM_NODE_IN_LIST 200
 #define GRID_SIZE 50
+#define MASK_NEW_NODE 0xF0
 
 typedef enum
 {
-    NEW_NODE = 0,
-    OBSTACLE,
-    CLOSED_LIST,
-    FINAL_TRAJ,
-    OPEN_LIST,
-    ROBOT
+    NEW_NODE = 0x00,
+    OBSTACLE = 0x10,
+    CLOSED_LIST = 0x01,
+    FINAL_TRAJ = 0x02,
+    OPEN_LIST = 0x03,
+    ROBOT = 0x04
 }cocobot_nodeType_e;
 
 typedef struct
@@ -41,13 +42,18 @@ typedef struct
 
 /**
  * Initialize the table used for a*
+ * Table width used is TABLE_WIDTH as for table length
  * Arguments:
  *  - table : static 2nd array representing the playground area for a*
- *  - length : length of the table
- *  - width : width of the table
  *  
  */
-void cocobot_pathfinder_initialise_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int length, int width);
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
+
+/**
+ * Reset the table to initial state
+ * To be called before each new path finding
+ */
+void cocobot_pathfinder_reset_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
 
 /**
  * Set a point on the table

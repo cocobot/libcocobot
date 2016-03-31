@@ -2,20 +2,20 @@
 #include <string.h>
 #include <math.h>
 
-void cocobot_pathfinder_initialise_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int length, int width)
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
 {
-    memset(table, 0, length * sizeof(cocobot_node_s));
-    for(int i = 0; i < length; i++)
+    memset(table, 0, (TABLE_LENGTH / GRID_SIZE) * sizeof(cocobot_node_s));
+    for(int i = 0; i < TABLE_LENGTH / GRID_SIZE; i++)
     {
-        memset(table[i], 0, width * sizeof(cocobot_node_s));
-        for(int j = 0; j < width; j++)
+        memset(table[i], 0, (TABLE_WIDTH / GRID_SIZE) * sizeof(cocobot_node_s));
+        for(int j = 0; j < TABLE_WIDTH / GRID_SIZE; j++)
         {
             table[i][j].x = i;
             table[i][j].y = j;
         }
     }
 
-    // ARound the dune
+    // Around the dune
     cocobot_pathfinder_set_rectangle(table, 20/GRID_SIZE, 200/GRID_SIZE, 800/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
     cocobot_pathfinder_set_rectangle(table, 20/GRID_SIZE, 200/GRID_SIZE, 2200/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
     
@@ -28,10 +28,20 @@ void cocobot_pathfinder_initialise_table(cocobot_node_s table[][TABLE_WIDTH/GRID
     cocobot_pathfinder_set_circle(table, 2990/GRID_SIZE, 1990/GRID_SIZE, 250/GRID_SIZE, OBSTACLE); 
 }
 
+void cocobot_pathfinder_reset_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
+{
+   for(int i = 0; i < TABLE_LENGTH/GRID_SIZE; i++)
+   {
+       for(int j = 0; j < TABLE_WIDTH/GRID_SIZE; j++)
+       {
+           table[i][j].nodeType &= MASK_NEW_NODE;
+       }
+   }
+}
+
 void cocobot_pathfinder_set_point(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type)
 {
     //Security to avoid buffer overflow
-    //TODO : Change Hard coded Value
     if((x < TABLE_LENGTH/GRID_SIZE) && (y < TABLE_WIDTH/GRID_SIZE) && (x >= 0) && (y >= 0))
         table[x][y].nodeType = node_type;
     //printf("x:%d, y:%d\n", _x, _y);
@@ -65,9 +75,9 @@ void cocobot_pathfinder_set_circle(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]
     {
         xMax = sqrt((float)radius*(float)radius - (float)(y-y_center)*(float)(y-y_center));
         //printf("x= %d, y= %d\n", (int)round(xMax), y);
-        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, y_center, y, node_type);
-        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, y_center - (int)round(xMax) , y, node_type);
-        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, y_center, 2*y_center - y - 1, node_type);
-        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, y_center - (int)round(xMax), 2*y_center - y - 1, node_type);
+        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, x_center, y, node_type);
+        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, x_center - (int)round(xMax) , y, node_type);
+        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, x_center, 2*y_center - y - 1, node_type);
+        cocobot_pathfinder_set_rectangle(table, (int)round(xMax), 1, x_center - (int)round(xMax), 2*y_center - y - 1, node_type);
     }
 }

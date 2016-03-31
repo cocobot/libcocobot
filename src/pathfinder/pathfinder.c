@@ -10,9 +10,10 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
 {
     char _return_value = TRAJECTORY_AVAILABLE;
 
-    cocobot_console_send_asynchronous("DEBUG", "Started");
+    cocobot_console_send_asynchronous("PATHFINDER", "Started");
     
-    cocobot_pathfinder_initialise_table(g_table, TABLE_LENGTH/GRID_SIZE, TABLE_WIDTH/GRID_SIZE);
+    cocobot_pathfinder_reset_table(g_table);
+    //cocobot_pathfinder_init();
     cocobot_pathfinder_initialize_list(&open_list);
     cocobot_pathfinder_init_trajectory(trajectory);
    
@@ -29,7 +30,7 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
 
     while((current_node.x != target_node->x) || (current_node.y != target_node->y))
     {
-        //cocobot_console_send_asynchronous("DEBUG","current node x=%d, y=%d \n", current_node.x, current_node.y);
+        //cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", p_currentNode->x, p_currentNode->y);
         //Treat adjacent node
         for(int i=current_node.x-1; i<=current_node.x+1; i++)
         {
@@ -52,7 +53,7 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
         }
         else
         {
-            cocobot_console_send_asynchronous("DEBUG", "No solution");
+            cocobot_console_send_asynchronous("PATHFINDER", "No solution");
             _return_value = NO_TRAJECTORY_AVAILABLE;
             break;
         }
@@ -62,3 +63,7 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
     return _return_value;
 }
 
+void cocobot_pathfinder_init()
+{
+    cocobot_pathfinder_initialize_table(g_table);
+}

@@ -13,7 +13,9 @@
 #include <cocobot/encoders.h>
 #endif //AUSBEE_SIM
 
+#ifndef M_PI
 #define M_PI 3.14159265358979323846264338327
+#endif
 
 //useful macros
 #define TICK2RAD(tick)  ((((float)tick) * M_PI) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
