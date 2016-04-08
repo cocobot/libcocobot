@@ -39,7 +39,24 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
 
 float cocobot_pathfinder_get_distance(cocobot_node_s *source, cocobot_node_s *dest)
 {
-    return sqrtf((dest->y - source->y)*(dest->y - source->y) + (dest->x - source->x)*(dest->x - source->x));
+    // Distance between a node and an other one located just next to it in the diagonal
+    static float distance_diag = sqrtf(2);
+
+    float _return_value = 0.0;
+
+    //Same node, in case of a dummy wants a distance between the same node
+    if((source->x == dest->x) && (source->y == dest->y))
+        _return_value = 0.0;
+    else if(source->x == dest->x)
+        _return_value = (float)abs(source->y - dest->y);
+    else if(source->y == dest->y)
+        _return_value = (float)abs(source->x - dest->x);
+    else if(abs(source->y - dest->y) == abs(source->x - dest->x))
+        _return_value = (float)abs(source->x - dest->x) * distance_diag;
+    else
+        _return_value = sqrtf((dest->y - source->y)*(dest->y - source->y) + (dest->x - source->x)*(dest->x - source->x));
+
+    return _return_value;
 }
 
 void cocobot_pathfinder_initialize_list(cocobot_list_s *list)
