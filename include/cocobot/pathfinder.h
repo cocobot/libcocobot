@@ -46,10 +46,10 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
 
 /**
  * Initialize the pathFinder
- * Arguments : TBD 
- *  - Maybe robot speed/acceleration
- *  - robot dimensionc
+ * Arguments : 
+ *  - robot_length (mm)
+ *  - robot_width (mm)
  */
-void cocobot_pathfinder_init();
+void cocobot_pathfinder_init(uint16_t robot_length, uint16_t robot_width);
 
 #endif //COCOBOT_PATHFINDER_H

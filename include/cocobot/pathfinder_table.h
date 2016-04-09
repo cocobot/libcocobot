@@ -47,7 +47,7 @@ typedef struct
  *  - table : static 2nd array representing the playground area for a*
  *  
  */
-void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
 
 /**
  * Reset the table to initial state

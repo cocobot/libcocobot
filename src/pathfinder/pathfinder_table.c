@@ -2,7 +2,7 @@
 #include <string.h>
 #include <math.h>
 
-void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width)
 {
     memset(table, 0, (TABLE_LENGTH / GRID_SIZE) * sizeof(cocobot_node_s));
     for(int i = 0; i < TABLE_LENGTH / GRID_SIZE; i++)
@@ -14,18 +14,34 @@ void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID
             table[i][j].y = j;
         }
     }
+    
+    //Compute a half diag of the robot to expand all obstacle to the size of half a robot
+    uint16_t half_diag = (uint16_t) (sqrtf((robot_length * robot_length) + (robot_width * robot_width)) / 2) + GRID_SIZE;
+    uint8_t grid_half_diag = half_diag / GRID_SIZE;
 
-    // Around the dune
-    cocobot_pathfinder_set_rectangle(table, 20/GRID_SIZE, 200/GRID_SIZE, 800/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
-    cocobot_pathfinder_set_rectangle(table, 20/GRID_SIZE, 200/GRID_SIZE, 2200/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
+    //Expand walls
+    cocobot_pathfinder_set_rectangle(table, TABLE_LENGTH / GRID_SIZE, grid_half_diag, 0, 0, OBSTACLE);  
+    cocobot_pathfinder_set_rectangle(table, TABLE_LENGTH / GRID_SIZE, grid_half_diag, 0, TABLE_WIDTH/GRID_SIZE - grid_half_diag, OBSTACLE);  
+    cocobot_pathfinder_set_rectangle(table, grid_half_diag, TABLE_WIDTH / GRID_SIZE, 0, 0, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, grid_half_diag, TABLE_WIDTH / GRID_SIZE, TABLE_LENGTH / GRID_SIZE - grid_half_diag, 0, OBSTACLE);  
+
+    // Around the dune (expanded)
+    cocobot_pathfinder_set_rectangle(table, (20 + half_diag * 2)/GRID_SIZE, 200/GRID_SIZE, (800 - half_diag)/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_circle(table, 810/GRID_SIZE, 200/GRID_SIZE, (half_diag + 10) / GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, (20 + half_diag * 2)/GRID_SIZE, 200/GRID_SIZE, (2200 - half_diag)/GRID_SIZE, 0/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_circle(table, 2210/GRID_SIZE, 200/GRID_SIZE, (half_diag + 10) / GRID_SIZE, OBSTACLE);
     
     //Central T (construction area)
-    cocobot_pathfinder_set_rectangle(table, 1200/GRID_SIZE, 20/GRID_SIZE, 900/GRID_SIZE, 750/GRID_SIZE, OBSTACLE);
-    cocobot_pathfinder_set_rectangle(table, 60/GRID_SIZE, 600/GRID_SIZE, 1470/GRID_SIZE, 750/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, 1200/GRID_SIZE, (20 + half_diag *2)/GRID_SIZE, 900/GRID_SIZE, (750 - half_diag)/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_circle(table, 900/GRID_SIZE, 760/GRID_SIZE, (half_diag + 10) / GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_circle(table, 2100/GRID_SIZE, 760/GRID_SIZE, (half_diag + 10) / GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, (50 + half_diag * 2)/GRID_SIZE, 600/GRID_SIZE, (1470 - half_diag)/GRID_SIZE, 750/GRID_SIZE, OBSTACLE);
+    cocobot_pathfinder_set_circle(table, 1500/GRID_SIZE, 1350/GRID_SIZE, (half_diag + 25) / GRID_SIZE, OBSTACLE);
+    //TODO expand nose
     
     //iles
-    cocobot_pathfinder_set_circle(table, 0/GRID_SIZE, 1990/GRID_SIZE, 250/GRID_SIZE, OBSTACLE); 
-    cocobot_pathfinder_set_circle(table, 2990/GRID_SIZE, 1990/GRID_SIZE, 250/GRID_SIZE, OBSTACLE); 
+    cocobot_pathfinder_set_circle(table, 0/GRID_SIZE, 1990/GRID_SIZE, (250 + half_diag)/GRID_SIZE, OBSTACLE); 
+    cocobot_pathfinder_set_circle(table, 2990/GRID_SIZE, 1990/GRID_SIZE, (250 + half_diag)/GRID_SIZE, OBSTACLE); 
 }
 
 void cocobot_pathfinder_reset_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])

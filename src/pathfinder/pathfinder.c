@@ -63,7 +63,7 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
     return _return_value;
 }
 
-void cocobot_pathfinder_init()
+void cocobot_pathfinder_init(uint16_t robot_length, uint16_t robot_width)
 {
-    cocobot_pathfinder_initialize_table(g_table);
+    cocobot_pathfinder_initialize_table(g_table, robot_length, robot_width);
 }
