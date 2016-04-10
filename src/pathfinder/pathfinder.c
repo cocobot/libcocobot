@@ -30,13 +30,13 @@ char cocobot_pathfinder_get_trajectory(cocobot_point_s starting_point, cocobot_p
 
     while((current_node.x != target_node->x) || (current_node.y != target_node->y))
     {
-        //cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", p_currentNode->x, p_currentNode->y);
+        //cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", current_node.x, current_node.y);
         //Treat adjacent node
         for(int i=current_node.x-1; i<=current_node.x+1; i++)
         {
             for(int j=current_node.y-1; j<=current_node.y+1; j++)
             {
-                //cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d\n", i, j);
+                //cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d", i, j);
                 if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != current_node.x) || (j!=current_node.y)))
                 {
                     cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], &current_node);
