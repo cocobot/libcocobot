@@ -26,7 +26,7 @@
  *  
  * Return Value: Time (ms) to execute the trajectory, 0 if the trajectory is not available
  **/
-uint16_t cocobot_pathfinder_get_trajectory_time(uint16_t starting_point_x, uint16_t starting_point_y, uint16_t target_point_x, uint16_t target_point_y);
+uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y);
 
 /**
  * Execute trajectory from starting point to target point
@@ -38,7 +38,7 @@ uint16_t cocobot_pathfinder_get_trajectory_time(uint16_t starting_point_x, uint1
  *  
  * Return Value: NO_TRAJECTORY_AVAILABLE if the target_point is not reachable 0 eitherway 
  */
-char cocobot_pathfinder_execute_trajectory(uint16_t starting_point_x, uint16_t starting_point_y, uint16_t target_point_x, uint16_t target_point_y);
+char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y);
 
 /**
  * Initialize the pathFinder

@@ -6,7 +6,7 @@
 static cocobot_node_s g_table[TABLE_LENGTH/GRID_SIZE][TABLE_WIDTH/GRID_SIZE];
 static cocobot_list_s open_list;
 
-uint16_t cocobot_pathfinder_get_trajectory_time(uint16_t starting_point_x, uint16_t starting_point_y, uint16_t target_point_x, uint16_t target_point_y)
+uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y)
 {
     cocobot_console_send_asynchronous("PATHFINDER", "Get trajectory time started");
     
@@ -15,11 +15,11 @@ uint16_t cocobot_pathfinder_get_trajectory_time(uint16_t starting_point_x, uint1
     cocobot_pathfinder_initialize_list(&open_list);
    
     //start_node
-    cocobot_node_s* start_node = &g_table[starting_point_x/GRID_SIZE][starting_point_y/GRID_SIZE];
+    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][(starting_point_y + (TABLE_WIDTH / 2))/GRID_SIZE];
     cocobot_pathfinder_set_start_node(start_node);
 
     //target_node
-    cocobot_node_s* target_node = &g_table[target_point_x/GRID_SIZE][target_point_y/GRID_SIZE];
+    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y + (TABLE_WIDTH / 2))/GRID_SIZE];
     cocobot_pathfinder_set_target_node(target_node);
 
     cocobot_node_s current_node = *start_node;
@@ -58,7 +58,7 @@ uint16_t cocobot_pathfinder_get_trajectory_time(uint16_t starting_point_x, uint1
     return cocobot_pathfinder_get_time(&current_node, g_table);
 }
 
-char cocobot_pathfinder_execute_trajectory(uint16_t starting_point_x, uint16_t starting_point_y, uint16_t target_point_x, uint16_t target_point_y)
+char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y)
 {
     cocobot_console_send_asynchronous("PATHFINDER", "execute trajectory started");
     
@@ -67,11 +67,11 @@ char cocobot_pathfinder_execute_trajectory(uint16_t starting_point_x, uint16_t s
     cocobot_pathfinder_initialize_list(&open_list);
    
     //start_node
-    cocobot_node_s* start_node = &g_table[starting_point_x/GRID_SIZE][starting_point_y/GRID_SIZE];
+    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][(starting_point_y + (TABLE_WIDTH / 2))/GRID_SIZE];
     cocobot_pathfinder_set_start_node(start_node);
 
     //target_node
-    cocobot_node_s* target_node = &g_table[target_point_x/GRID_SIZE][target_point_y/GRID_SIZE];
+    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y + (TABLE_WIDTH / 2))/GRID_SIZE];
     cocobot_pathfinder_set_target_node(target_node);
 
     cocobot_node_s current_node = *start_node;
