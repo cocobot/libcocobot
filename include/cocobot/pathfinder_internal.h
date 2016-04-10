@@ -4,6 +4,33 @@
 #include "cocobot/pathfinder_table.h"
 #include "cocobot/pathfinder.h"
 
+#define NO_TRAJECTORY_AVAILABLE -1
+#define TRAJECTORY_AVAILABLE 0
+
+typedef struct 
+{
+    uint16_t x;
+    uint16_t y;
+}cocobot_point_s;
+
+//TODO
+typedef struct
+{
+    cocobot_point_s trajectory[TRAJECTORY_NBR_POINTS_MAX]; //TODO:Adjust number of points
+    uint8_t nbr_points; // Number of points in the trajectory
+}cocobot_trajectory_s;
+
+/**
+ * Execute algorythm
+ * Arguments:
+ *  - table : table used for computing
+ *  - node : pointer on the current node, final node after function ececution
+ *  - open_list : pointer on a* openlist
+ *
+ * Return Value: NO_TRAJECTORY_AVAILABLE or TRAJECTORY_AVAILABLE
+ */
+//char cocobot_pathfinder_internal_execute_algo(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_node_s *node, cocobot_list_s *open_list);
+
 /**
  * Compute a node of the table
  * Arguments:
@@ -43,7 +70,6 @@ void cocobot_pathfinder_initialize_list(cocobot_list_s *list);
 void cocobot_pathfinder_add_to_list(cocobot_list_s *list, cocobot_node_s *node);
 
 /**
- * TODO: To be modified when list do not use malloc anymore
  * Remove a node from a list
  * Arguments:
  *  - list : pointer on the list
@@ -78,6 +104,15 @@ void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node);
  *  
  */
 void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s *trajectory);
+
+/**
+ * Get time for trajectory
+ * Arguments:
+ *  - final_node : pointer on final node of the path
+ *  - table : table used for computing
+ *  
+ */
+uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
 
 /**
  * Convert a table node into a point containing real coordonates
