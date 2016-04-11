@@ -57,7 +57,7 @@ void cocobot_asserv_init(void)
 
 float cocobot_asserv_get_linear_speed(void)
 {
-  return cocobot_asserv_ramp_get_max_speed(&_ramp_dist) * 10000.0f;
+  return cocobot_asserv_ramp_get_max_speed(&_ramp_dist) * 10.0f;
 }
 
 void cocobot_asserv_compute(void)
@@ -65,6 +65,8 @@ void cocobot_asserv_compute(void)
   if(_state == COCOBOT_ASSERV_ENABLE)
   {
     //compute ramps
+    cocobot_asserv_ramp_set_feedback(&_ramp_dist, cocobot_position_get_distance());
+    cocobot_asserv_ramp_set_feedback(&_ramp_angu, cocobot_position_get_angle());
     cocobot_asserv_ramp_compute(&_ramp_dist);
     cocobot_asserv_ramp_compute(&_ramp_angu);
 
@@ -158,7 +160,7 @@ int cocobot_asserv_handle_console(char * command)
     float set;
     if(cocobot_console_get_fargument(0, &set))
     {
-      cocobot_asserv_pid_set_ki(&_pid_dist, set);
+      cocobot_asserv_pid_set_kd(&_pid_dist, set);
     }
     cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_kd(&_pid_dist));
     return 1;

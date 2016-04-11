@@ -10,6 +10,10 @@ void cocobot_asserv_ramp_init(cocobot_asserv_ramp_t * ramp)
   ramp->position_current = 0;
   ramp->speed_target = 0;
 }
+void cocobot_asserv_ramp_set_feedback(cocobot_asserv_ramp_t * ramp, float feedback)
+{
+  ramp->position_feedback = feedback;
+}
 
 void cocobot_asserv_ramp_set_max_speed(cocobot_asserv_ramp_t * ramp, float max_speed)
 {
@@ -79,6 +83,21 @@ void cocobot_asserv_ramp_compute(cocobot_asserv_ramp_t * ramp)
   if(ramp->speed_target < -ramp->max_speed)
   {
     ramp->speed_target = -ramp->max_speed;
+  }
+
+  if((err > 0) && (ramp->speed_target > 0))
+  {
+    if(ramp->position_current < ramp->position_feedback)
+    {
+      ramp->position_current = ramp->position_feedback;
+    }
+  }
+  if((err < 0) && (ramp->speed_target < 0))
+  {
+    if(ramp->position_current > ramp->position_feedback)
+    {
+      ramp->position_current = ramp->position_feedback;
+    }
   }
 
   //compute next output

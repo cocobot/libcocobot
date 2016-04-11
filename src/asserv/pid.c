@@ -103,9 +103,9 @@ void cocobot_asserv_pid_compute(cocobot_asserv_pid_t * pid)
   //saturate integral
   if(pid->integral > pid->max_integral)
   {
-    pid->integral = -pid->max_integral;
+    pid->integral = pid->max_integral;
   }
-  if(pid->integral < pid->max_integral)
+  if(pid->integral < -pid->max_integral)
   {
     pid->integral = -pid->max_integral;
   }
