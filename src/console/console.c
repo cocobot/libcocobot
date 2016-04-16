@@ -40,14 +40,14 @@ static void cocobot_console_send_string(char * str)
 
 void cocobot_console_send_asynchronous(char * title, char * fmt, ...)
 {
-  //prevent other to use uart peripheral
-  xSemaphoreTake(_mutex, portMAX_DELAY);
-
   //format output using vsnprintf. Be careful if using float, it may alloc some memory
   va_list args;
   va_start (args, fmt);
   vsnprintf(_async_buffer, sizeof(_async_buffer), fmt, args);
   va_end (args);
+
+  //prevent other to use uart peripheral
+  xSemaphoreTake(_mutex, portMAX_DELAY);
 
   //send the output to the serial line
   cocobot_console_send_string(COCOBOT_CONSOLE_ASYNCHRONOUS_START);
@@ -62,14 +62,14 @@ void cocobot_console_send_asynchronous(char * title, char * fmt, ...)
 
 void cocobot_console_send_answer(char * fmt, ...)
 {
-  //prevent other to use uart peripheral
-  xSemaphoreTake(_mutex, portMAX_DELAY);
-
   //format output using vsnprintf. Be careful if using float, it may alloc some memory
   va_list args;
   va_start (args, fmt);
   vsnprintf(_sync_buffer, sizeof(_sync_buffer), fmt, args);
   va_end (args);
+
+  //prevent other to use uart peripheral
+  xSemaphoreTake(_mutex, portMAX_DELAY);
 
   //send the output to the serial line
   cocobot_console_send_string(_sync_buffer);
@@ -231,6 +231,7 @@ void cocobot_console_sync_thread(void *arg)
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_position_handle_console);
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_trajectory_handle_console);
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_asserv_handle_console);
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_opponent_detection_handle_console);
 
         //try to parse the command with user defined callback
         if(_user_handler != NULL)

@@ -197,6 +197,7 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_a(cocobo
   }
 
   cocobot_asserv_set_angular_set_point(target);
+  cocobot_asserv_set_distance_set_point(order->start.distance);
 
   return COCOBOT_TRAJECTORY_ORDER_IN_PROGRESS;
 }

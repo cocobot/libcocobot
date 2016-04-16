@@ -8,6 +8,13 @@
 
 #define EUCLIDEAN_DISTANCE(x, y) (sqrt((x)*(x) + (y)*(y)))
 
+typedef enum
+{
+  COCOBOT_ACTION_REACHED,
+  COCOBOT_ACTION_NOT_REACHED,
+  COCOBOT_ADVERSARY_DETECTED,
+} cocobot_scheduler_return_value_t;
+
 typedef struct
 {
   float x, y; // in mm
@@ -21,7 +28,9 @@ typedef struct
   cocobot_pos_t   pos;
   int32_t         execution_time;
   float           success_proba;
-  action_callback callback;
+  action_callback preexec_callback;
+  action_callback exec_callback;
+  action_callback cleanup_callback;
   void *          callback_arg;
   action_unlocked unlocked;
   uint8_t         done;
@@ -81,7 +90,8 @@ static void cocobot_action_scheduler_update_game_state(void)
 
 void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
     unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
-    action_callback callback, void * callback_arg, action_unlocked unlocked)
+    action_callback preexec_callback, action_callback exec_callback,
+    action_callback cleanup_callback, void * callback_arg, action_unlocked unlocked)
 {
   strncpy(action_list[action_list_end].name, name, ACTION_NAME_LENGTH);
   action_list[action_list_end].score = score;
@@ -90,7 +100,9 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
   action_list[action_list_end].pos.a = a;
   action_list[action_list_end].execution_time = execution_time;
   action_list[action_list_end].success_proba = success_proba;
-  action_list[action_list_end].callback = callback;
+  action_list[action_list_end].preexec_callback = preexec_callback;
+  action_list[action_list_end].exec_callback = exec_callback;
+  action_list[action_list_end].cleanup_callback = cleanup_callback;
   action_list[action_list_end].callback_arg = callback_arg;
   action_list[action_list_end].unlocked = unlocked;
   action_list[action_list_end].done = 0;
@@ -158,11 +170,16 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
   return effective_elementary_value;
 }
 
-static void cocobot_action_scheduler_goto(cocobot_action_t * action)
+// TODO: should be replaced by a pathfinder function, with more return code
+static cocobot_scheduler_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
 {
   cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
-  cocobot_trajectory_goto_a(action->pos.a, -1);
+  if (action->pos.a != NAN) {
+    cocobot_trajectory_goto_a(action->pos.a, -1);
+  }
   cocobot_trajectory_wait();
+
+  return COCOBOT_ACTION_REACHED;
 }
 
 int cocobot_action_scheduler_execute_best_action(void)
@@ -188,12 +205,28 @@ int cocobot_action_scheduler_execute_best_action(void)
   }
 
   cocobot_action_t * best_action = &action_list[action_best_index];
-  cocobot_action_scheduler_goto(best_action);
-  int action_return_value = (*best_action->callback)(best_action->callback_arg);
+
+  if (best_action->preexec_callback != NULL)
+  {
+    (*best_action->preexec_callback)(best_action->callback_arg);
+  }
+
+  int goto_return_value = cocobot_action_scheduler_goto(best_action);
+  int action_return_value = -1;
+
+  if (goto_return_value == COCOBOT_ACTION_REACHED)
+  {
+    action_return_value = (*best_action->exec_callback)(best_action->callback_arg);
+  }
 
   if (action_return_value > 0)
   {
     best_action->done = 1;
+  }
+
+  if (best_action->cleanup_callback != NULL)
+  {
+    (*best_action->cleanup_callback)(best_action->callback_arg);
   }
 
   return action_return_value;

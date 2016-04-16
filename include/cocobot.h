@@ -12,5 +12,6 @@
 #include <cocobot/action_scheduler.h>
 #include <cocobot/pathfinder.h>
 #include <cocobot/game_state.h>
+#include <cocobot/opponent_detection.h>
 
 #endif// COCOBOT_H

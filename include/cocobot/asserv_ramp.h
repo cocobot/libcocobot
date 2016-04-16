@@ -9,6 +9,7 @@ typedef struct
 
   float position_target;
   float position_current;
+  float position_feedback;
   float speed_target;
 } cocobot_asserv_ramp_t;
 
@@ -92,5 +93,7 @@ float cocobot_asserv_ramp_get_position_target(cocobot_asserv_ramp_t * ramp);
  *  actual speed target
  */
 float cocobot_asserv_ramp_get_speed_target(cocobot_asserv_ramp_t * ramp);
+
+void cocobot_asserv_ramp_set_feedback(cocobot_asserv_ramp_t * ramp, float feedback);
 
 #endif// COCOBOT_ASSERV_RAMP_H

@@ -190,6 +190,15 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
     motor_position[1] += left_motor_speed / 100.0f;
   }
 #else
+
+#ifdef COCOBOT_INVERT_LEFT_MOTOR
+  left_motor_speed = -left_motor_speed;
+#endif
+#ifdef COCOBOT_INVERT_RIGHT_MOTOR
+  right_motor_speed = -right_motor_speed;
+#endif
+
+
   if(left_motor_speed > 0xffff)
   {
     left_motor_speed = 0xffff;
@@ -252,7 +261,10 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
     k1 = k2;
   }
 
-  cocobot_position_set_motor_command(k1 * (linear_speed-angular_velocity), k1 * (linear_speed+angular_velocity));
+  float left_sp = k1 * (linear_speed-angular_velocity);
+  float right_sp = k1 * (linear_speed+angular_velocity);
+
+  cocobot_position_set_motor_command(left_sp, right_sp);
 }
 
 int cocobot_position_handle_console(char * command)
