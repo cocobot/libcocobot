@@ -116,6 +116,13 @@ void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node);
 void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s *trajectory);
 
 /**
+ * set gotoxy for trajectory
+ * Arguments:
+ *  - trajectory : pointer on the grid points composing the trajectory
+ */
+void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory);
+
+/**
  * Get time for trajectory
  * Arguments:
  *  - final_node : pointer on final node of the path
@@ -123,6 +130,14 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
  *  
  */
 uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
+
+/**
+ * Linearise the trajectory using Ramer-Douglas-Peucker algorythm
+ *  - trajectory : pointer on the trajectory to linearise
+ *  - threshold : max radial distance (used for the algorythm
+ * 
+ */
+void cocobot_pathfinder_linearise_trajectory(cocobot_trajectory_s *trajectory, uint8_t threshold);
 
 /**
  * Convert a table node into a point containing real coordonates

@@ -198,6 +198,11 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
         memmove(trajectory->trajectory, &trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - trajectory->nbr_points], trajectory->nbr_points * sizeof(cocobot_point_s));
 }
 
+void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
+{
+    ;
+}
+
 uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
 {
     uint16_t time = 0;
@@ -210,6 +215,11 @@ uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s 
 
     return time;
 } 
+
+void cocobot_pathfinder_linearise_trajectory(cocobot_trajectory_s *trajectory, uint8_t threshold)
+{
+    ;
+}
 
 cocobot_point_s cocobot_pathfinder_get_point_from_node(cocobot_node_s *node)
 {

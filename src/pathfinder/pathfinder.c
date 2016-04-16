@@ -110,11 +110,13 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
         }
     }
 
-    cocobot_pathfinder_get_path(&current_node, g_table, &_trajectory);    
+    cocobot_pathfinder_get_path(&current_node, g_table, &_trajectory);
     for(int i = 0; i < _trajectory.nbr_points; i++)
     {
         cocobot_console_send_asynchronous("REAL_PATH", "x: %d, y:%d", _trajectory.trajectory[i].x, _trajectory.trajectory[i].y);
     }
+    
+    
     return TRAJECTORY_AVAILABLE;
 }
 
