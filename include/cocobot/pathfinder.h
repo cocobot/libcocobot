@@ -5,16 +5,6 @@
 
 #define TRAJECTORY_NBR_POINTS_MAX 160
 
-/**
- * A point on the table
- * x in mm
- * y in mm
- * 
- *   ___x___
- * y|       |
- *  |       |
- *   -------
-*/
 
 /**
  * Get execution time to go from starting point to target point

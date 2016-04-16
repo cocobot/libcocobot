@@ -13,6 +13,8 @@ typedef enum
 {
     NEW_NODE = 0x00,
     OBSTACLE = 0x10,
+    FORBIDDEN = 0x20, // Zone where the robot can't go
+    SOFT_OBSTACLE = 0x30, //Zone where the robot can eventually go but must be cautious when turning
     CLOSED_LIST = 0x01,
     FINAL_TRAJ = 0x02,
     OPEN_LIST = 0x03,

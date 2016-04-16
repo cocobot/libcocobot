@@ -7,6 +7,16 @@
 #define NO_TRAJECTORY_AVAILABLE -1
 #define TRAJECTORY_AVAILABLE 0
 
+/**
+ * A point on the table
+ * x in mm
+ * y in mm
+ * 
+ *   ___x___
+ * y|       |
+ *  |       |
+ *   -------
+*/
 typedef struct 
 {
     uint16_t x;
