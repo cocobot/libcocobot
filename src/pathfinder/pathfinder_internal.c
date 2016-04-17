@@ -327,7 +327,7 @@ cocobot_point_s cocobot_pathfinder_get_real_coordinate(cocobot_point_s point)
 {
     cocobot_point_s _point;
     _point.x = point.x * GRID_SIZE + GRID_SIZE/2 - TABLE_LENGTH/2;
-    _point.y = point.y * GRID_SIZE + GRID_SIZE/2 - TABLE_WIDTH/2;
+    _point.y = TABLE_WIDTH/2 - (point.y * GRID_SIZE + GRID_SIZE/2);
     return _point;
 }
 
