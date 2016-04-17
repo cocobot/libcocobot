@@ -210,11 +210,15 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
     cocobot_trajectory_s final;
     cocobot_pathfinder_init_trajectory(&final);
     final = cocobot_pathfinder_douglas_peucker(trajectory, 1.0);
+    cocobot_point_s point;
 
     for(int i = 1; i < (final.nbr_points - 1); i++)
     {
-        cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d, y=%d", cocobot_pathfinder_get_real_coordinate(final.trajectory[i]).x, cocobot_pathfinder_get_real_coordinate(final.trajectory[i]).y);
+        point = cocobot_pathfinder_get_real_coordinate(final.trajectory[i]);
+        cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d, y=%d", point.x, point.y);
     }
+    cocobot_trajectory_goto_xy(g_real_target_point.x, g_real_target_point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
     cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d, y=%d", g_real_target_point.x, g_real_target_point.y);
 
 }
