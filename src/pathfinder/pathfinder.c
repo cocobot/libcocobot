@@ -71,6 +71,7 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
     cocobot_pathfinder_set_start_node(start_node);
 
     //target_node
+    cocobot_pathfinder_save_real_target_node(target_point_x, target_point_y);
     cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y + (TABLE_WIDTH / 2))/GRID_SIZE];
     cocobot_pathfinder_set_target_node(target_node);
 
@@ -116,7 +117,7 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
         cocobot_console_send_asynchronous("REAL_PATH", "x: %d, y:%d", _trajectory.trajectory[i].x, _trajectory.trajectory[i].y);
     }
     
-    
+    cocobot_pathfinder_set_trajectory(&_trajectory);
     return TRAJECTORY_AVAILABLE;
 }
 

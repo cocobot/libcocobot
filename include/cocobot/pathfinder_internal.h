@@ -19,8 +19,8 @@
 */
 typedef struct 
 {
-    uint16_t x;
-    uint16_t y;
+    int16_t x;
+    int16_t y;
 }cocobot_point_s;
 
 //TODO
@@ -98,6 +98,14 @@ int cocobot_pathfinder_remove_from_list(cocobot_list_s *list, cocobot_node_s *no
 void cocobot_pathfinder_set_target_node(cocobot_node_s *target_node);
 
 /**
+ * Save real coordinates of target node
+ * Arguments: 
+ *  - x : x coordinate of target node
+ *  - y : y coordinate of target node
+ */
+void cocobot_pathfinder_save_real_target_node(int16_t x, int16_t y);
+
+/**
  * Set start node
  * Arguments:
  *  - node : pointer on start node. 
@@ -116,7 +124,7 @@ void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node);
 void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s *trajectory);
 
 /**
- * set gotoxy for trajectory
+ * set gotoxy for trajectory using Ramer-Douglas-Peucker algorythm
  * Arguments:
  *  - trajectory : pointer on the grid points composing the trajectory
  */
@@ -132,12 +140,53 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory);
 uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
 
 /**
- * Linearise the trajectory using Ramer-Douglas-Peucker algorythm
+ * Execute Douglas-Peucker algorythm on trajectory
+ * NOTE: Algorythm is recurcive
+ * Arguments:
  *  - trajectory : pointer on the trajectory to linearise
- *  - threshold : max radial distance (used for the algorythm
+ *  - threshold : max radial distance (used for the algorythm)
  * 
+ * Return Value : Linearised trajectory
  */
-void cocobot_pathfinder_linearise_trajectory(cocobot_trajectory_s *trajectory, uint8_t threshold);
+cocobot_trajectory_s cocobot_pathfinder_douglas_peucker(cocobot_trajectory_s *trajectory, float threshold);
+
+/**
+ * Get radial distance between the point and the line passing by start and end point
+ * Arguments:
+ *  - start : first bound of the line
+ *  - end : last bound of the line
+ *  - point : point from witch radial distance is calculated
+ *
+ * Return Value: the distance
+ */
+float cocobot_pathfinder_get_radial_distance(cocobot_point_s start, cocobot_point_s end, cocobot_point_s point);
+
+/**
+ * Concatenate two trajectories into one
+ * Arguments:
+ *  - first : pointer on the first trajectory. It's also in that trajectory that teh second will be merged
+ *  - second : pointer on the second trajectory, merged into first
+ */
+void cocobot_pathfinder_concatenate_traj(cocobot_trajectory_s *first, cocobot_trajectory_s *second);
+
+/**
+ * Cut base trajectory into two others first and second around cut_index
+ * Arguments:
+ *  - base: pointer on the trajectory to be cut
+ *  - first : pointer on the first part of cut trajectory
+ *  - second: pointer on the second part of the cut traj
+ *  - cut_index : determine where the base is cut
+ */
+void cocobot_pathfinder_cut_trajectory(cocobot_trajectory_s *base, cocobot_trajectory_s *first, cocobot_trajectory_s *second, uint8_t cut_index);
+
+/**
+ * Get real coordinate from table point
+ * Arguments:
+ *  - point : point with table coordinates
+ *
+ * Return Value: point with real coordinates 
+ */
+cocobot_point_s cocobot_pathfinder_get_real_coordinate(cocobot_point_s point);
 
 /**
  * Convert a table node into a point containing real coordonates
