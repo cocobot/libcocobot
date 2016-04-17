@@ -15,11 +15,11 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
     cocobot_pathfinder_initialize_list(&open_list);
    
     //start_node
-    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][(starting_point_y + (TABLE_WIDTH / 2))/GRID_SIZE];
+    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][(starting_point_y - (TABLE_WIDTH / 2))/GRID_SIZE];
     cocobot_pathfinder_set_start_node(start_node);
 
     //target_node
-    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y + (TABLE_WIDTH / 2))/GRID_SIZE];
+    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y - (TABLE_WIDTH / 2))/GRID_SIZE];
     cocobot_pathfinder_set_target_node(target_node);
 
     cocobot_node_s current_node = *start_node;
