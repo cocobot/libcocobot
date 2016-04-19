@@ -216,7 +216,7 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
     {
         point = cocobot_pathfinder_get_real_coordinate(final.trajectory[i]);
         cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-        cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d, y=%d", point.x, point.y);
+        cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d (x=%d), y=%d (y=%d)", point.x, final.trajectory[i].x, point.y, final.trajectory[i].y);
     }
     cocobot_trajectory_goto_xy(g_real_target_point.x, g_real_target_point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
     cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d, y=%d", g_real_target_point.x, g_real_target_point.y);
