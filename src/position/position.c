@@ -36,6 +36,10 @@ static int position_debug = 0;
 #ifdef AUSBEE_SIM
 int fake_vrep = 0;
 #endif
+static float last_left_sp = 0;
+static float last_right_sp = 0;
+static float left_motor_alpha = 0.5;
+static float right_motor_alpha = 0.5;
 
 static void cocobot_position_compute(void)
 {
@@ -263,6 +267,9 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
 
   float left_sp = k1 * (linear_speed-angular_velocity);
   float right_sp = k1 * (linear_speed+angular_velocity);
+
+  left_sp = last_left_sp + left_motor_alpha * (left_sp - last_left_sp);
+  right_sp = last_right_sp + right_motor_alpha * (right_sp - last_right_sp);
 
   cocobot_position_set_motor_command(left_sp, right_sp);
 }

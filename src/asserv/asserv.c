@@ -232,7 +232,7 @@ int cocobot_asserv_handle_console(char * command)
     float set;
     if(cocobot_console_get_fargument(0, &set))
     {
-      cocobot_asserv_pid_set_ki(&_pid_angu, set);
+      cocobot_asserv_pid_set_kd(&_pid_angu, set);
     }
     cocobot_console_send_answer("%.3f", (double)cocobot_asserv_pid_get_kd(&_pid_angu));
     return 1;
