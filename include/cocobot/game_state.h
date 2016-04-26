@@ -20,6 +20,8 @@ void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action);
  */
 void cocobot_game_state_wait_for_starter_removed(void);
 
+uint8_t cocobot_game_state_is_starter_removed(void);
+
 /* Get the color.
  * Return:
  *  - cocobot_game_state_color_t. if COCOBOT_GAME_STATE_COLOR_NEG if the robot starts with negative x, and COCOBOT_GAME_STATE_COLOR_POS if the robot starts with positive x.
