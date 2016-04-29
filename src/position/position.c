@@ -13,10 +13,6 @@
 #include <cocobot/encoders.h>
 #endif //AUSBEE_SIM
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327
-#endif
-
 //useful macros
 #define TICK2RAD(tick)  ((((float)tick) * M_PI) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
 #define TICK2DEG(tick)  ((((float)tick) * 180.0) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
@@ -38,8 +34,8 @@ int fake_vrep = 0;
 #endif
 static float last_left_sp = 0;
 static float last_right_sp = 0;
-static float left_motor_alpha = 0.5;
-static float right_motor_alpha = 0.5;
+static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1000.0f);
+static float right_motor_alpha = (((float)CONFIG_LIBCOCOBOT_RIGHT_MOTOR_ALPHA) / 1000.0f);
 
 static void cocobot_position_compute(void)
 {
@@ -280,6 +276,28 @@ int cocobot_position_handle_console(char * command)
   {
     cocobot_console_get_iargument(0, &position_debug);
     cocobot_console_send_answer("%d", position_debug);
+    return 1;
+  }
+
+  if(strcmp(command,"left_motor_alpha") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      left_motor_alpha = set / 1000.0;
+    }
+    cocobot_console_send_answer("%.3f", left_motor_alpha * 1000);
+    return 1;
+  }
+
+  if(strcmp(command,"right_motor_alpha") == 0)
+  {
+    float set;
+    if(cocobot_console_get_fargument(0, &set))
+    {
+      right_motor_alpha = set / 1000.0;
+    }
+    cocobot_console_send_answer("%.3f", right_motor_alpha * 1000);
     return 1;
   }
 

@@ -16,8 +16,6 @@
 
 #define BIT_0 (1 << 0)
 
-#define M_PI 3.14159265358979323846264338327
-
 typedef enum
 {
   COCOBOT_TRAJECTORY_GOTO_D,
@@ -112,6 +110,8 @@ static cocobot_trajectory_handle_t last_handle;
 static volatile cocobot_trajectory_result_t result;
 
 static EventGroupHandle_t no_more_orders;
+
+static cocobot_trajectory_xy_default_t xy_pref;
 
 static float cocobot_trajectory_find_best_angle(float current_angle, float angle)
 {
@@ -711,6 +711,7 @@ void cocobot_trajectory_init(unsigned int task_priority)
   order_list_write = 0;
   order_list_read = 0;
   estimations_need_recompute = 0;
+  xy_pref = COCOBOT_TRAJECTORY_FORWARD;
 
   //create mutex
   mutex = xSemaphoreCreateMutex();
@@ -793,6 +794,18 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_a(float angle, float time)
 
 cocobot_trajectory_handle_t cocobot_trajectory_goto_xy(float x, float y, float time)
 {
+  if(xy_pref == COCOBOT_TRAJECTORY_BACKWARD)
+  {
+    return cocobot_trajectory_goto_xy_backward(x, y, time);
+  }
+  else
+  {
+    return cocobot_trajectory_goto_xy_forward(x, y, time);
+  }
+}
+
+cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_forward(float x, float y, float time)
+{
   //fill cocobot_trajectory_order_t struct
   cocobot_trajectory_order_t order;
   order.handle = COCOBOT_TRAJECTORY_INVALID_HANDLE;
@@ -873,6 +886,11 @@ cocobot_trajectory_result_t cocobot_trajectory_wait(void)
   }
 
   return result;
+}
+
+void cocobot_trajetory_set_xy_default(cocobot_trajectory_xy_default_t pref)
+{
+  xy_pref = pref;
 }
 
 int cocobot_trajectory_handle_console(char * command)

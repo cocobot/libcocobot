@@ -173,8 +173,9 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 // TODO: should be replaced by a pathfinder function, with more return code
 static cocobot_scheduler_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
 {
+ // cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), action->pos.x, action->pos.y);
   cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
-  if (action->pos.a != NAN) {
+  if (!isnan(action->pos.a)) {
     cocobot_trajectory_goto_a(action->pos.a, -1);
   }
   cocobot_trajectory_wait();

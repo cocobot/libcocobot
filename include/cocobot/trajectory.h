@@ -16,6 +16,12 @@ typedef enum
   COCOBOT_TRAJECTORY_RUNNING,
 } cocobot_trajectory_result_t;
 
+typedef enum
+{
+  COCOBOT_TRAJECTORY_FORWARD,
+  COCOBOT_TRAJECTORY_BACKWARD
+} cocobot_trajectory_xy_default_t;
+
 
 /* Initialization of the trajectory module. Need to be called before any other action 
  * Argument:
@@ -51,6 +57,8 @@ cocobot_trajectory_handle_t cocobot_trajectory_goto_a(float angle, float time);
  *    An unique id for order identification
  */
 cocobot_trajectory_handle_t cocobot_trajectory_goto_xy(float x, float y, float time);
+
+cocobot_trajectory_handle_t cocobot_trajectory_goto_xy_forward(float x, float y, float time);
 
 /* Goto xy order but in backward. 
  * Arguments:
@@ -139,5 +147,7 @@ void cocobot_trajectory_resume(void);
  *  1 : if command has been successfully handled
  */
 int cocobot_trajectory_handle_console(char * command);
+
+void cocobot_trajetory_set_xy_default(cocobot_trajectory_xy_default_t pref);
 
 #endif// COCOBOT_TRAJECTORY_H
