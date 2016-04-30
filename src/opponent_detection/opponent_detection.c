@@ -14,6 +14,7 @@ typedef struct
   int ir;
   int alert_activated;
   int alert;
+  int force_on;
 } cocobot_opponent_detection_usir_t;
 
 typedef struct
@@ -38,12 +39,21 @@ void cocobot_opponent_detection_task(void * arg)
     int i;
     for(i = 0; i < 4; i += 1)
     {
-      platform_us_send_trig(i);
-      vTaskDelay(15 / portTICK_PERIOD_MS);
-      platform_us_reset_trig(i);
-      float adc_mV = platform_adc_get_mV(PLATFORM_ADC_IR0 + i);
-      _usirs[i].ir = adc_mV;
-      _usirs[i].us = platform_us_get_value(i);
+      if(_usirs[i].alert_activated || _usirs[i].force_on)
+      {
+        platform_us_send_trig(i);
+        vTaskDelay(15 / portTICK_PERIOD_MS);
+        platform_us_reset_trig(i);
+        vTaskDelay(15 / portTICK_PERIOD_MS);
+        float adc_mV = platform_adc_get_mV(PLATFORM_ADC_IR0 + i);
+        _usirs[i].ir = adc_mV;
+        _usirs[i].us = platform_us_get_value(i);
+      }
+      else
+      {
+        _usirs[i].ir = 0;
+        _usirs[i].us = 0;
+      }
     }
 
     //wait 100ms
@@ -58,10 +68,11 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
   int i;
   for(i = 0; i < 4; i += 1)
   {
-    _usirs[i].us = 42000;
-    _usirs[i].ir = 42000;
+    _usirs[i].us = 0;
+    _usirs[i].ir = 0;
     _usirs[i].alert_activated = COCOBOT_OPPONENT_DETECTION_DEACTIVATED;
     _usirs[i].alert = 0;
+    _usirs[i].force_on = 0;
   }
 
   _fakebot.x = 0;
@@ -74,12 +85,33 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
 
 int cocobot_opponent_detection_handle_console(char * command)
 {
+  if(strcmp(command,"opponent_usir_force") == 0)
+  {
+    int id;
+    if(cocobot_console_get_iargument(0, &id))
+    {
+      if((id > 0) && (id <= 4))
+      {
+        int set;
+        if(cocobot_console_get_iargument(1, &set))
+        {
+          _usirs[id].force_on = set;
+        }
+
+        cocobot_console_send_answer("%d", _usirs[id].force_on);
+        return 1;
+      }              
+    }
+    cocobot_console_send_answer("?");
+    return 1;
+  }
+
   if(strcmp(command,"opponent_usir") == 0)
   {
     int i;
     for(i = 0; i < 4; i += 1)
     {
-      cocobot_console_send_answer("%d %d %d %d", _usirs[i].us, _usirs[i].ir, _usirs[i].alert_activated, _usirs[i].alert);
+      cocobot_console_send_answer("%d %d %d %d %d", _usirs[i].us, _usirs[i].ir, _usirs[i].alert_activated, _usirs[i].alert, _usirs[i].force_on);
     }
 
     return 1;
