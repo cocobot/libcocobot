@@ -286,7 +286,7 @@ int cocobot_position_handle_console(char * command)
     {
       left_motor_alpha = set / 1000.0;
     }
-    cocobot_console_send_answer("%.3f", left_motor_alpha * 1000);
+    cocobot_console_send_answer("%.3f", (double)(left_motor_alpha * 1000));
     return 1;
   }
 
@@ -297,7 +297,7 @@ int cocobot_position_handle_console(char * command)
     {
       right_motor_alpha = set / 1000.0;
     }
-    cocobot_console_send_answer("%.3f", right_motor_alpha * 1000);
+    cocobot_console_send_answer("%.3f", (double)(right_motor_alpha * 1000));
     return 1;
   }
 

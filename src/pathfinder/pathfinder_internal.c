@@ -77,7 +77,7 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
 float cocobot_pathfinder_get_distance(cocobot_node_s *source, cocobot_node_s *dest)
 {
     // Distance between a node and an other one located just next to it in the diagonal
-    static float distance_diag = sqrtf(2);
+    static float distance_diag = M_SQRT2;
 
     float _return_value = 0.0;
 
@@ -191,7 +191,7 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
         //fill trajectory beginning by the end
         trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
         trajectory->nbr_points++;
-        final_node = &table[final_node->pX][final_node->pY];
+        final_node = &table[(int)final_node->pX][(int)final_node->pY];
     }
     cocobot_console_send_asynchronous("PATH","x= %d, y= %d", final_node->x, final_node->y);
     //last point
@@ -229,8 +229,8 @@ uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s 
     while((final_node->x !=  g_start_node.x) || (final_node->y != g_start_node.y))
     {
         //get time between node and parent node 
-        time += (uint16_t)(cocobot_pathfinder_get_distance(final_node, &table[final_node->pX][final_node->pY]) * (float)GRID_SIZE) / cocobot_asserv_get_linear_speed();
-        final_node = &table[final_node->pX][final_node->pY];
+        time += (uint16_t)(cocobot_pathfinder_get_distance(final_node, &table[(int)final_node->pX][(int)final_node->pY]) * (float)GRID_SIZE) / cocobot_asserv_get_linear_speed();
+        final_node = &table[(int)final_node->pX][(int)final_node->pY];
     }
 
     return time;
@@ -299,7 +299,9 @@ void cocobot_pathfinder_concatenate_traj(cocobot_trajectory_s *first, cocobot_tr
         }
     }
     else
+    {
         ;//TODO: Set an error code --> Assuming I know what I do for now
+    }
 }
 
 void cocobot_pathfinder_cut_trajectory(cocobot_trajectory_s *base, cocobot_trajectory_s *first, cocobot_trajectory_s *second, uint8_t cut_index)
@@ -312,7 +314,9 @@ void cocobot_pathfinder_cut_trajectory(cocobot_trajectory_s *base, cocobot_traje
         memcpy(second->trajectory, &base->trajectory[cut_index], second->nbr_points * sizeof(cocobot_point_s));
     }
     else
+    {
         ;//TODO: Set an error code --> Assuming I know what I do for now
+    }
 }
 
 cocobot_point_s cocobot_pathfinder_get_point_from_node(cocobot_node_s *node)
