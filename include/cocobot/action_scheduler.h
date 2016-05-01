@@ -3,8 +3,6 @@
 
 #define ACTION_NAME_LENGTH 32
 
-#define COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME -1
-
 /**** User action callback return values ****/
 /* For positive return values, action will be marked as done and never tried
  * again.
@@ -12,12 +10,16 @@
  */
 typedef enum
 {
+  COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME      = -5,
+  COCOBOT_RETURN_NO_ACTION_TO_EXEC             = -4,
+
   COCOBOT_RETURN_ACTION_NOT_REACHED            = -3,
   COCOBOT_RETURN_ACTION_ADVERSARY_BLOCK_ACTION = -2,
   COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE        = -1,
 
   COCOBOT_RETURN_ACTION_SUCCESS                = 1,
   COCOBOT_RETURN_ACTION_CORRUPTED              = 2,
+  COCOBOT_RETURN_ACTION_SUCCESS_BUT_IM_LOST    = 3,
 
   // Action can be done later but it's value decreases
   COCOBOT_RETURN_ACTION_PARTIAL_SUCCESS        = 0,
@@ -87,10 +89,11 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
 /* Execute best remaining action based on game's state (selected strategy,
  * remaining time, distance, obstacles, ...)
  * Return:
- *  - 0 if no action could be executed with current game's state
+ *  - COCOBOT_RETURN_NO_ACTION_TO_EXEC if no action could be executed with
+ *  current game's state
  *  - else action's callback return value (negative value for error during
  *  action's execution)
  */
-int cocobot_action_scheduler_execute_best_action(void);
+cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(void);
 
 #endif // COCOBOT_ACTION_SCHEDULER_H

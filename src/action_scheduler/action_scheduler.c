@@ -203,16 +203,21 @@ static void cocobot_action_scheduler_handle_action_result(cocobot_action_t *acti
   {
     action->score = action->score / 2;
   }
+
+  if (action_result == COCOBOT_RETURN_ACTION_SUCCESS_BUT_IM_LOST)
+  {
+    // TODO: do something smart when robot is lost
+  }
 }
 
-static int cocobot_action_scheduler_execute_action(cocobot_action_t *action)
+static cocobot_action_callback_result_t cocobot_action_scheduler_execute_action(cocobot_action_t *action)
 {
   if (action->preexec_callback != NULL)
   {
     (*action->preexec_callback)(action->callback_arg);
   }
 
-  int action_return_value = COCOBOT_RETURN_ACTION_NOT_REACHED;
+  cocobot_action_callback_result_t action_return_value = COCOBOT_RETURN_ACTION_NOT_REACHED;
   cocobot_action_goto_return_value_t goto_return_value = cocobot_action_scheduler_goto(action);
 
   if (goto_return_value == COCOBOT_ACTION_REACHED)
@@ -230,7 +235,25 @@ static int cocobot_action_scheduler_execute_action(cocobot_action_t *action)
   return action_return_value;
 }
 
-int cocobot_action_scheduler_execute_best_action(void)
+cocobot_action_callback_result_t
+cocobot_action_scheduler_execute_action_by_name(char name[ACTION_NAME_LENGTH])
+{
+  unsigned int action_current_index = 0;
+  cocobot_action_callback_result_t action_result = COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME;
+
+  for (; action_current_index < action_list_end; action_current_index++)
+  {
+    if (strncmp(name, action_list[action_current_index].name, ACTION_NAME_LENGTH) == 0)
+    {
+      action_result = cocobot_action_scheduler_execute_action(&action_list[action_current_index]);
+      break;
+    }
+  }
+
+  return action_result;
+}
+
+cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(void)
 {
   unsigned int action_current_index = 0;
   int action_best_index = -1;
@@ -250,7 +273,7 @@ int cocobot_action_scheduler_execute_best_action(void)
 
   if (action_best_index < 0 || action_best_eval < 0)
   {
-    return 0;
+    return COCOBOT_RETURN_NO_ACTION_TO_EXEC;
   }
 
   cocobot_action_t * best_action = &action_list[action_best_index];
