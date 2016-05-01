@@ -232,6 +232,7 @@ void cocobot_console_sync_thread(void *arg)
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_trajectory_handle_console);
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_asserv_handle_console);
         COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_opponent_detection_handle_console);
+        COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, cmd, cocobot_action_scheduler_handle_console);
 
         //try to parse the command with user defined callback
         if(_user_handler != NULL)

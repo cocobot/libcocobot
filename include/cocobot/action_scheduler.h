@@ -59,8 +59,14 @@ void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat);
  */
 void cocobot_action_scheduler_set_average_linear_speed(float speed);
 
-/* Start internal variables computation. Must be called when game starts and
- * before cocobot_action_scheduler_execute_best_action.
+/* Set scheduler pause
+ * Argument:
+ * - paused: pause game if 1, unpause if 0
+ */
+void cocobot_action_scheduler_set_pause(int paused);
+
+/* Start internal variables computation and starts unfinite loop to handle
+ * actions execution.
  */
 void cocobot_action_scheduler_start(void);
 
@@ -108,5 +114,14 @@ cocobot_action_scheduler_execute_action_by_name(char name[ACTION_NAME_LENGTH]);
  *  action's execution)
  */
 cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(void);
+
+/* Handle console user command related to action scheduler module
+ * Argument:
+ *  - command: requested command
+ * Return:
+ *  0 : if command is not reconized
+ *  1 : if command has been successfully handled
+ */
+int cocobot_action_scheduler_handle_console(char * command);
 
 #endif // COCOBOT_ACTION_SCHEDULER_H

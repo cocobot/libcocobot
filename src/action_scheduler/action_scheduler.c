@@ -55,6 +55,7 @@ static struct cocobot_game_state_t
   cocobot_pos_t       robot_pos;
   float               robot_average_linear_speed; // in m/s (or mm/ms)
   int32_t             remaining_time; // in ms
+  int                 paused;
 } current_game_state;
 
 
@@ -66,6 +67,7 @@ void cocobot_action_scheduler_init(void)
   current_game_state.robot_pos.a = 0;
   current_game_state.robot_average_linear_speed = 0;
   current_game_state.remaining_time = INITIAL_REMAINING_TIME;
+  current_game_state.paused = 0;
 
   action_list_end = 0;
 }
@@ -80,9 +82,28 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed)
   current_game_state.robot_average_linear_speed = speed;
 }
 
+void cocobot_action_scheduler_set_pause(int paused)
+{
+  current_game_state.paused = paused;
+}
+
 void cocobot_action_scheduler_start(void)
 {
   start_time = xTaskGetTickCount();
+
+
+  while(1)
+  {
+    if (current_game_state.paused)
+    {
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    else if(!cocobot_action_scheduler_execute_best_action())
+    {
+      //wait small delay if no action is available (which is a bad thing)
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+  }
 }
 
 static void cocobot_action_scheduler_update_game_state(void)
@@ -279,4 +300,80 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
   cocobot_action_t * best_action = &action_list[action_best_index];
 
   return cocobot_action_scheduler_execute_action(best_action);
+}
+
+static void cocobot_action_scheduler_list_actions(void)
+{
+  unsigned int i = 0;
+
+  if (action_list_end == 0)
+  {
+      cocobot_console_send_answer("No action in the list");
+      return;
+  }
+
+  for (; i < action_list_end; i++)
+  {
+    if (action_list[i].done)
+    {
+      cocobot_console_send_answer("%s: done", action_list[i].name);
+    }
+    else
+    {
+      cocobot_console_send_answer("%s", action_list[i].name);
+    }
+  }
+}
+
+int cocobot_action_scheduler_handle_console(char * command)
+{
+  if(strcmp(command,"exec_action") == 0)
+  {
+    char action_name[ACTION_NAME_LENGTH];
+    cocobot_action_callback_result_t res;
+
+    if(cocobot_console_get_sargument(0, action_name, sizeof(action_name)))
+    {
+      res = cocobot_action_scheduler_execute_action_by_name(action_name);
+      switch(res)
+      {
+      case COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME:
+        cocobot_console_send_answer("No action with name: %s", action_name);
+        break;
+
+      case COCOBOT_RETURN_ACTION_NOT_REACHED:
+        cocobot_console_send_answer("Action could not be reached");
+        break;
+
+      case COCOBOT_RETURN_ACTION_SUCCESS:
+        cocobot_console_send_answer("Action succeed");
+        break;
+
+      case COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE:
+        cocobot_console_send_answer("Action failed");
+        break;
+
+      default:
+        cocobot_console_send_answer("Something happened");
+      }
+    }
+    return 1;
+  }
+  if(strcmp(command,"list_actions") == 0)
+  {
+    cocobot_action_scheduler_list_actions();
+    return 1;
+  }
+  if(strcmp(command,"action_pause") == 0)
+  {
+    int paused;
+    if(cocobot_console_get_iargument(0, &paused))
+    {
+      cocobot_action_scheduler_set_pause(paused);
+    }
+    cocobot_console_send_answer("Paused: %d", current_game_state.paused);
+    return 1;
+  }
+
+  return 0;
 }
