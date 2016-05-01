@@ -66,6 +66,7 @@ void cocobot_action_scheduler_start(void);
 
 /* Add a new action to the scheduler
  * Argument:
+ *  - name:             action's name
  *  - score:            points given when action succeed
  *  - x, y, a:          position (mm) and angle (deg), relatively to the table,
  *  to start the action. The angle value is optional and can be replaced by
@@ -85,6 +86,18 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
     unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
     action_callback preexec_callback, action_callback exec_callback,
     action_callback cleanup_callback, void * callback_arg, action_unlocked unlocked);
+
+/* Execute the action with the given name
+ * Argument:
+ *  - name: name of the action to execute
+ * Return:
+ *  - COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME if there is no action with this
+ *  name 
+ *  - else action's callback return value (negative value for error during
+ *  action's execution)
+ */
+cocobot_action_callback_result_t
+cocobot_action_scheduler_execute_action_by_name(char name[ACTION_NAME_LENGTH]);
 
 /* Execute best remaining action based on game's state (selected strategy,
  * remaining time, distance, obstacles, ...)
