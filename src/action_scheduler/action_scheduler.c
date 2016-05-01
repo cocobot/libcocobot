@@ -13,7 +13,14 @@ typedef enum
   COCOBOT_ACTION_REACHED,
   COCOBOT_ACTION_NOT_REACHED,
   COCOBOT_ADVERSARY_DETECTED,
-} cocobot_scheduler_return_value_t;
+} cocobot_action_goto_return_value_t;
+
+typedef enum
+{
+  COCOBOT_ACTION_LOCKED = -1,
+  COCOBOT_ACTION_ALREADY_DONE = -2,
+  COCOBOT_ACTION_NOT_ENOUGH_TIME = -3,
+} cocobot_action_eval_return_value_t;
 
 typedef struct
 {
@@ -152,15 +159,16 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 
   if (action->execution_time > current_game_state.remaining_time)
   {
-    return -1;
+    return COCOBOT_ACTION_NOT_ENOUGH_TIME;
   }
   if (action->done)
   {
-    return -0.5f;
+    return COCOBOT_ACTION_ALREADY_DONE;
+
   }
   if (action->unlocked != NULL && !action->unlocked())
   {
-    return -0.25f;
+    return COCOBOT_ACTION_LOCKED;
   }
 
   // TODO: Take strategy and remaining time to execute other actions into account
@@ -171,7 +179,7 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 }
 
 // TODO: should be replaced by a pathfinder function, with more return code
-static cocobot_scheduler_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
+static cocobot_action_goto_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
 {
  // cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), action->pos.x, action->pos.y);
   cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
@@ -183,6 +191,45 @@ static cocobot_scheduler_return_value_t cocobot_action_scheduler_goto(cocobot_ac
   return COCOBOT_ACTION_REACHED;
 }
 
+static void cocobot_action_scheduler_handle_action_result(cocobot_action_t *action,
+    cocobot_action_callback_result_t action_result)
+{
+  // If action correctly executed, mark action as done
+  if (action_result > 0)
+  {
+    action->done = 1;
+  }
+  else if (action_result == COCOBOT_RETURN_ACTION_PARTIAL_SUCCESS)
+  {
+    action->score = action->score / 2;
+  }
+}
+
+static int cocobot_action_scheduler_execute_action(cocobot_action_t *action)
+{
+  if (action->preexec_callback != NULL)
+  {
+    (*action->preexec_callback)(action->callback_arg);
+  }
+
+  int action_return_value = COCOBOT_RETURN_ACTION_NOT_REACHED;
+  cocobot_action_goto_return_value_t goto_return_value = cocobot_action_scheduler_goto(action);
+
+  if (goto_return_value == COCOBOT_ACTION_REACHED)
+  {
+    action_return_value = (*action->exec_callback)(action->callback_arg);
+  }
+
+  cocobot_action_scheduler_handle_action_result(action, action_return_value);
+
+  if (action->cleanup_callback != NULL)
+  {
+    (*action->cleanup_callback)(action->callback_arg);
+  }
+
+  return action_return_value;
+}
+
 int cocobot_action_scheduler_execute_best_action(void)
 {
   unsigned int action_current_index = 0;
@@ -190,6 +237,7 @@ int cocobot_action_scheduler_execute_best_action(void)
   float action_current_eval = 0;
   float action_best_eval = -1;
 
+  // Compute best action
   for (; action_current_index < action_list_end; action_current_index++)
   {
     action_current_eval = cocobot_action_scheduler_eval(&action_list[action_current_index]);
@@ -207,28 +255,5 @@ int cocobot_action_scheduler_execute_best_action(void)
 
   cocobot_action_t * best_action = &action_list[action_best_index];
 
-  if (best_action->preexec_callback != NULL)
-  {
-    (*best_action->preexec_callback)(best_action->callback_arg);
-  }
-
-  int goto_return_value = cocobot_action_scheduler_goto(best_action);
-  int action_return_value = -1;
-
-  if (goto_return_value == COCOBOT_ACTION_REACHED)
-  {
-    action_return_value = (*best_action->exec_callback)(best_action->callback_arg);
-  }
-
-  if (action_return_value > 0)
-  {
-    best_action->done = 1;
-  }
-
-  if (best_action->cleanup_callback != NULL)
-  {
-    (*best_action->cleanup_callback)(best_action->callback_arg);
-  }
-
-  return action_return_value;
+  return cocobot_action_scheduler_execute_action(best_action);
 }

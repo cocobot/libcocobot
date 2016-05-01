@@ -3,6 +3,27 @@
 
 #define ACTION_NAME_LENGTH 32
 
+#define COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME -1
+
+/**** User action callback return values ****/
+/* For positive return values, action will be marked as done and never tried
+ * again.
+ * For negative values, action failed and can be tried later.
+ */
+typedef enum
+{
+  COCOBOT_RETURN_ACTION_NOT_REACHED            = -3,
+  COCOBOT_RETURN_ACTION_ADVERSARY_BLOCK_ACTION = -2,
+  COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE        = -1,
+
+  COCOBOT_RETURN_ACTION_SUCCESS                = 1,
+  COCOBOT_RETURN_ACTION_CORRUPTED              = 2,
+
+  // Action can be done later but it's value decreases
+  COCOBOT_RETURN_ACTION_PARTIAL_SUCCESS        = 0,
+} cocobot_action_callback_result_t;
+
+
 typedef enum
 {
   COCOBOT_STRATEGY_DEFENSIVE,
@@ -13,7 +34,7 @@ typedef enum
 // Should return a strictly positive value if execution was done correctly.
 // Should return a strictly negative value when action could not be fully
 // executed and should be done later.
-typedef int (*action_callback)(void *);
+typedef cocobot_action_callback_result_t (*action_callback)(void *);
 
 typedef int (*action_unlocked)(void);
 
