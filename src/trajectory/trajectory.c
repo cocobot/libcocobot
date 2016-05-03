@@ -113,6 +113,8 @@ static EventGroupHandle_t no_more_orders;
 
 static cocobot_trajectory_xy_default_t xy_pref;
 
+static int enable_opponent_detection;
+
 static float cocobot_trajectory_find_best_angle(float current_angle, float angle)
 {
   //get modulo multiplier
@@ -162,10 +164,15 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_d(cocobo
 {
   float diff = order->start.distance + order->d_order.distance - cocobot_position_get_distance();
   float estimation = order->estimated_distance_before_stop;
+
   
 
   if(order->d_order.distance < 0)
   {
+    if(enable_opponent_detection)
+    {
+      COCOBOT_OPPONENT_DETECTION_ENABLE_FRONT();
+    }
     if(diff > -TRAJECTORY_D_STOP_MM)
     {
       return COCOBOT_TRAJECTORY_ORDER_DONE;
@@ -175,6 +182,10 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_d(cocobo
   }
   else
   {
+    if(enable_opponent_detection)
+    {
+      COCOBOT_OPPONENT_DETECTION_ENABLE_BACK();
+    }
     if(diff < TRAJECTORY_D_STOP_MM)
     {
       return COCOBOT_TRAJECTORY_ORDER_DONE;
@@ -215,7 +226,10 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy(cocob
   float cy = y - order->start.y;
   float cd = cx * cx + cy * cy;
 
-
+  if(enable_opponent_detection)
+  {
+    COCOBOT_OPPONENT_DETECTION_ENABLE_FRONT();
+  }
 
   if(sqrtf(cd) > sqrtf(td) - TRAJECTORY_XY_STOP_MM)
   {
@@ -337,7 +351,10 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_xy_backw
   float cy = y - order->start.y;
   float cd = cx * cx + cy * cy;
 
-
+  if(enable_opponent_detection)
+  {
+    COCOBOT_OPPONENT_DETECTION_ENABLE_BACK();
+  }
 
   if(sqrtf(cd) > sqrtf(td) - TRAJECTORY_XY_STOP_MM)
   {
@@ -640,9 +657,11 @@ void cocobot_trajectory_task(void * arg)
         order->start.y = cocobot_position_get_y();
         order->start.time = xTaskGetTickCount();
 
+        COCOBOT_OPPONENT_DETECTION_DISABLE();
+
         order->initialized = 1;
       }
-
+     
       cocobot_trajectory_order_status_t status;
       //find the right order handler
       switch(order->type)
@@ -712,6 +731,8 @@ void cocobot_trajectory_init(unsigned int task_priority)
   order_list_read = 0;
   estimations_need_recompute = 0;
   xy_pref = COCOBOT_TRAJECTORY_FORWARD;
+
+  enable_opponent_detection = 1;
 
   //create mutex
   mutex = xSemaphoreCreateMutex();
@@ -956,4 +977,9 @@ int cocobot_trajectory_handle_console(char * command)
   }
 
   return 0;
+}
+
+void cocobot_trajectory_set_opponent_detection(int enable)
+{
+  enable_opponent_detection = enable;
 }

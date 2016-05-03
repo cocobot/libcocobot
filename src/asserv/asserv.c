@@ -15,6 +15,10 @@ static int _pid_dist_debug;
 static int _pid_angu_debug;
 static cocobot_asserv_state_t _state = COCOBOT_ASSERV_DISABLE;
 
+static int stop = 0;
+static float stop_angular = 0;
+static float stop_distance = 0;
+
 void cocobot_asserv_init(void)
 {
   //no debug output if not requested
@@ -64,6 +68,24 @@ void cocobot_asserv_compute(void)
 {
   if(_state == COCOBOT_ASSERV_ENABLE)
   {
+    if(cocobot_opponent_detection_is_in_alert())
+    {
+      if(!stop)
+      {
+        stop = 1;
+
+        stop_angular = cocobot_position_get_angle();
+        stop_distance = cocobot_position_get_distance();
+      }
+
+      cocobot_asserv_ramp_reset(&_ramp_dist, cocobot_position_get_distance());
+      cocobot_asserv_ramp_reset(&_ramp_angu, cocobot_position_get_angle());
+    }
+    else
+    {
+      stop = 0;
+    }
+
     //compute ramps
     cocobot_asserv_ramp_set_feedback(&_ramp_dist, cocobot_position_get_distance());
     cocobot_asserv_ramp_set_feedback(&_ramp_angu, cocobot_position_get_angle());
@@ -103,12 +125,18 @@ void cocobot_asserv_compute(void)
 
 void cocobot_asserv_set_distance_set_point(float distance)
 {
-  cocobot_asserv_ramp_set_position_target(&_ramp_dist, distance);
+  if(!stop)
+  {
+    cocobot_asserv_ramp_set_position_target(&_ramp_dist, distance);
+  }
 }
 
 void cocobot_asserv_set_angular_set_point(float angular)
 {
-  cocobot_asserv_ramp_set_position_target(&_ramp_angu, angular);
+  if(!stop)
+  {
+    cocobot_asserv_ramp_set_position_target(&_ramp_angu, angular);
+  }
 }
 
 void cocobot_asserv_set_state(cocobot_asserv_state_t state)
