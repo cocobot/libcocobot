@@ -79,7 +79,9 @@ void cocobot_opponent_detection_task(void * arg)
 
         if((fabs(_usirs[i].us - _usirs[i].us) < COCOBOT_OPPONENT_MIN_CORRELATION) && (_usirs[i].us < alert_threshold))
         {
+#ifndef AUSBEE_SIM
           _usirs[i].alert = 1;
+#endif
           clear = 0;
           platform_gpio_set(PLATFORM_GPIO0);
         }
@@ -143,7 +145,7 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
     _usirs[i].force_on = 0;
   }
 
-  alert_threshold = 600;
+  alert_threshold = 250;
   _fakebot.x = 0;
   _fakebot.y = 0;
   _fakebot.activated = COCOBOT_OPPONENT_DETECTION_DEACTIVATED;

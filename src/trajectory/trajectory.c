@@ -171,7 +171,7 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_d(cocobo
   {
     if(enable_opponent_detection)
     {
-      COCOBOT_OPPONENT_DETECTION_ENABLE_FRONT();
+      COCOBOT_OPPONENT_DETECTION_ENABLE_BACK();
     }
     if(diff > -TRAJECTORY_D_STOP_MM)
     {
@@ -184,7 +184,7 @@ static cocobot_trajectory_order_status_t cocobot_trajectory_handle_type_d(cocobo
   {
     if(enable_opponent_detection)
     {
-      COCOBOT_OPPONENT_DETECTION_ENABLE_BACK();
+      COCOBOT_OPPONENT_DETECTION_ENABLE_FRONT();
     }
     if(diff < TRAJECTORY_D_STOP_MM)
     {

@@ -20,7 +20,7 @@ static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 {
   (void)xTimer;
 
- // cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+  cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
 
   if(_funny_action != NULL)
   {
