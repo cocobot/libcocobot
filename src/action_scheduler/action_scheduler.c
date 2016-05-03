@@ -13,7 +13,14 @@ typedef enum
   COCOBOT_ACTION_REACHED,
   COCOBOT_ACTION_NOT_REACHED,
   COCOBOT_ADVERSARY_DETECTED,
-} cocobot_scheduler_return_value_t;
+} cocobot_action_goto_return_value_t;
+
+typedef enum
+{
+  COCOBOT_ACTION_LOCKED = -1,
+  COCOBOT_ACTION_ALREADY_DONE = -2,
+  COCOBOT_ACTION_NOT_ENOUGH_TIME = -3,
+} cocobot_action_eval_return_value_t;
 
 typedef struct
 {
@@ -48,6 +55,7 @@ static struct cocobot_game_state_t
   cocobot_pos_t       robot_pos;
   float               robot_average_linear_speed; // in m/s (or mm/ms)
   int32_t             remaining_time; // in ms
+  int                 paused;
 } current_game_state;
 
 
@@ -59,6 +67,7 @@ void cocobot_action_scheduler_init(void)
   current_game_state.robot_pos.a = 0;
   current_game_state.robot_average_linear_speed = 0;
   current_game_state.remaining_time = INITIAL_REMAINING_TIME;
+  current_game_state.paused = 0;
 
   action_list_end = 0;
 }
@@ -73,9 +82,28 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed)
   current_game_state.robot_average_linear_speed = speed;
 }
 
+void cocobot_action_scheduler_set_pause(int paused)
+{
+  current_game_state.paused = paused;
+}
+
 void cocobot_action_scheduler_start(void)
 {
   start_time = xTaskGetTickCount();
+
+
+  while(1)
+  {
+    if (current_game_state.paused)
+    {
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    else if(!cocobot_action_scheduler_execute_best_action())
+    {
+      //wait small delay if no action is available (which is a bad thing)
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+  }
 }
 
 static void cocobot_action_scheduler_update_game_state(void)
@@ -152,15 +180,16 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 
   if (action->execution_time > current_game_state.remaining_time)
   {
-    return -1;
+    return COCOBOT_ACTION_NOT_ENOUGH_TIME;
   }
   if (action->done)
   {
-    return -0.5f;
+    return COCOBOT_ACTION_ALREADY_DONE;
+
   }
   if (action->unlocked != NULL && !action->unlocked())
   {
-    return -0.25f;
+    return COCOBOT_ACTION_LOCKED;
   }
 
   // TODO: Take strategy and remaining time to execute other actions into account
@@ -171,7 +200,7 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 }
 
 // TODO: should be replaced by a pathfinder function, with more return code
-static cocobot_scheduler_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
+static cocobot_action_goto_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
 {
  // cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), action->pos.x, action->pos.y);
   cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
@@ -183,13 +212,76 @@ static cocobot_scheduler_return_value_t cocobot_action_scheduler_goto(cocobot_ac
   return COCOBOT_ACTION_REACHED;
 }
 
-int cocobot_action_scheduler_execute_best_action(void)
+static void cocobot_action_scheduler_handle_action_result(cocobot_action_t *action,
+    cocobot_action_callback_result_t action_result)
+{
+  // If action correctly executed, mark action as done
+  if (action_result > 0)
+  {
+    action->done = 1;
+  }
+  else if (action_result == COCOBOT_RETURN_ACTION_PARTIAL_SUCCESS)
+  {
+    action->score = action->score / 2;
+  }
+
+  if (action_result == COCOBOT_RETURN_ACTION_SUCCESS_BUT_IM_LOST)
+  {
+    // TODO: do something smart when robot is lost
+  }
+}
+
+static cocobot_action_callback_result_t cocobot_action_scheduler_execute_action(cocobot_action_t *action)
+{
+  if (action->preexec_callback != NULL)
+  {
+    (*action->preexec_callback)(action->callback_arg);
+  }
+
+  cocobot_action_callback_result_t action_return_value = COCOBOT_RETURN_ACTION_NOT_REACHED;
+  cocobot_action_goto_return_value_t goto_return_value = cocobot_action_scheduler_goto(action);
+
+  if (goto_return_value == COCOBOT_ACTION_REACHED)
+  {
+    action_return_value = (*action->exec_callback)(action->callback_arg);
+  }
+
+  cocobot_action_scheduler_handle_action_result(action, action_return_value);
+
+  if (action->cleanup_callback != NULL)
+  {
+    (*action->cleanup_callback)(action->callback_arg);
+  }
+
+  return action_return_value;
+}
+
+cocobot_action_callback_result_t
+cocobot_action_scheduler_execute_action_by_name(char name[ACTION_NAME_LENGTH])
+{
+  unsigned int action_current_index = 0;
+  cocobot_action_callback_result_t action_result = COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME;
+
+  for (; action_current_index < action_list_end; action_current_index++)
+  {
+    if (strncmp(name, action_list[action_current_index].name, ACTION_NAME_LENGTH) == 0)
+    {
+      action_result = cocobot_action_scheduler_execute_action(&action_list[action_current_index]);
+      break;
+    }
+  }
+
+  return action_result;
+}
+
+cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(void)
 {
   unsigned int action_current_index = 0;
   int action_best_index = -1;
   float action_current_eval = 0;
   float action_best_eval = -1;
 
+  // Compute best action
   for (; action_current_index < action_list_end; action_current_index++)
   {
     action_current_eval = cocobot_action_scheduler_eval(&action_list[action_current_index]);
@@ -202,33 +294,86 @@ int cocobot_action_scheduler_execute_best_action(void)
 
   if (action_best_index < 0 || action_best_eval < 0)
   {
-    return 0;
+    return COCOBOT_RETURN_NO_ACTION_TO_EXEC;
   }
 
   cocobot_action_t * best_action = &action_list[action_best_index];
 
-  if (best_action->preexec_callback != NULL)
+  return cocobot_action_scheduler_execute_action(best_action);
+}
+
+static void cocobot_action_scheduler_list_actions(void)
+{
+  unsigned int i = 0;
+
+  if (action_list_end == 0)
   {
-    (*best_action->preexec_callback)(best_action->callback_arg);
+      cocobot_console_send_answer("No action in the list");
+      return;
   }
 
-  int goto_return_value = cocobot_action_scheduler_goto(best_action);
-  int action_return_value = -1;
-
-  if (goto_return_value == COCOBOT_ACTION_REACHED)
+  for (; i < action_list_end; i++)
   {
-    action_return_value = (*best_action->exec_callback)(best_action->callback_arg);
+    if (action_list[i].done)
+    {
+      cocobot_console_send_answer("%s: done", action_list[i].name);
+    }
+    else
+    {
+      cocobot_console_send_answer("%s", action_list[i].name);
+    }
+  }
+}
+
+int cocobot_action_scheduler_handle_console(char * command)
+{
+  if(strcmp(command,"exec_action") == 0)
+  {
+    char action_name[ACTION_NAME_LENGTH];
+    cocobot_action_callback_result_t res;
+
+    if(cocobot_console_get_sargument(0, action_name, sizeof(action_name)))
+    {
+      res = cocobot_action_scheduler_execute_action_by_name(action_name);
+      switch(res)
+      {
+      case COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME:
+        cocobot_console_send_answer("No action with name: %s", action_name);
+        break;
+
+      case COCOBOT_RETURN_ACTION_NOT_REACHED:
+        cocobot_console_send_answer("Action could not be reached");
+        break;
+
+      case COCOBOT_RETURN_ACTION_SUCCESS:
+        cocobot_console_send_answer("Action succeed");
+        break;
+
+      case COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE:
+        cocobot_console_send_answer("Action failed");
+        break;
+
+      default:
+        cocobot_console_send_answer("Something happened");
+      }
+    }
+    return 1;
+  }
+  if(strcmp(command,"list_actions") == 0)
+  {
+    cocobot_action_scheduler_list_actions();
+    return 1;
+  }
+  if(strcmp(command,"action_pause") == 0)
+  {
+    int paused;
+    if(cocobot_console_get_iargument(0, &paused))
+    {
+      cocobot_action_scheduler_set_pause(paused);
+    }
+    cocobot_console_send_answer("Paused: %d", current_game_state.paused);
+    return 1;
   }
 
-  if (action_return_value > 0)
-  {
-    best_action->done = 1;
-  }
-
-  if (best_action->cleanup_callback != NULL)
-  {
-    (*best_action->cleanup_callback)(best_action->callback_arg);
-  }
-
-  return action_return_value;
+  return 0;
 }

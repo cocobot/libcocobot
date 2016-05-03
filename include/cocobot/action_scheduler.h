@@ -3,6 +3,29 @@
 
 #define ACTION_NAME_LENGTH 32
 
+/**** User action callback return values ****/
+/* For positive return values, action will be marked as done and never tried
+ * again.
+ * For negative values, action failed and can be tried later.
+ */
+typedef enum
+{
+  COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME      = -5,
+  COCOBOT_RETURN_NO_ACTION_TO_EXEC             = -4,
+
+  COCOBOT_RETURN_ACTION_NOT_REACHED            = -3,
+  COCOBOT_RETURN_ACTION_ADVERSARY_BLOCK_ACTION = -2,
+  COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE        = -1,
+
+  COCOBOT_RETURN_ACTION_SUCCESS                = 1,
+  COCOBOT_RETURN_ACTION_CORRUPTED              = 2,
+  COCOBOT_RETURN_ACTION_SUCCESS_BUT_IM_LOST    = 3,
+
+  // Action can be done later but it's value decreases
+  COCOBOT_RETURN_ACTION_PARTIAL_SUCCESS        = 0,
+} cocobot_action_callback_result_t;
+
+
 typedef enum
 {
   COCOBOT_STRATEGY_DEFENSIVE,
@@ -13,7 +36,7 @@ typedef enum
 // Should return a strictly positive value if execution was done correctly.
 // Should return a strictly negative value when action could not be fully
 // executed and should be done later.
-typedef int (*action_callback)(void *);
+typedef cocobot_action_callback_result_t (*action_callback)(void *);
 
 typedef int (*action_unlocked)(void);
 
@@ -36,13 +59,20 @@ void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat);
  */
 void cocobot_action_scheduler_set_average_linear_speed(float speed);
 
-/* Start internal variables computation. Must be called when game starts and
- * before cocobot_action_scheduler_execute_best_action.
+/* Set scheduler pause
+ * Argument:
+ * - paused: pause game if 1, unpause if 0
+ */
+void cocobot_action_scheduler_set_pause(int paused);
+
+/* Start internal variables computation and starts unfinite loop to handle
+ * actions execution.
  */
 void cocobot_action_scheduler_start(void);
 
 /* Add a new action to the scheduler
  * Argument:
+ *  - name:             action's name
  *  - score:            points given when action succeed
  *  - x, y, a:          position (mm) and angle (deg), relatively to the table,
  *  to start the action. The angle value is optional and can be replaced by
@@ -63,13 +93,35 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
     action_callback preexec_callback, action_callback exec_callback,
     action_callback cleanup_callback, void * callback_arg, action_unlocked unlocked);
 
-/* Execute best remaining action based on game's state (selected strategy,
- * remaining time, distance, obstacles, ...)
+/* Execute the action with the given name
+ * Argument:
+ *  - name: name of the action to execute
  * Return:
- *  - 0 if no action could be executed with current game's state
+ *  - COCOBOT_RETURN_NO_ACTION_WITH_THIS_NAME if there is no action with this
+ *  name 
  *  - else action's callback return value (negative value for error during
  *  action's execution)
  */
-int cocobot_action_scheduler_execute_best_action(void);
+cocobot_action_callback_result_t
+cocobot_action_scheduler_execute_action_by_name(char name[ACTION_NAME_LENGTH]);
+
+/* Execute best remaining action based on game's state (selected strategy,
+ * remaining time, distance, obstacles, ...)
+ * Return:
+ *  - COCOBOT_RETURN_NO_ACTION_TO_EXEC if no action could be executed with
+ *  current game's state
+ *  - else action's callback return value (negative value for error during
+ *  action's execution)
+ */
+cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(void);
+
+/* Handle console user command related to action scheduler module
+ * Argument:
+ *  - command: requested command
+ * Return:
+ *  0 : if command is not reconized
+ *  1 : if command has been successfully handled
+ */
+int cocobot_action_scheduler_handle_console(char * command);
 
 #endif // COCOBOT_ACTION_SCHEDULER_H
