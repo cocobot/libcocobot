@@ -193,7 +193,7 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
   }
 
   // TODO: Take strategy and remaining time to execute other actions into account
-  float potential_elementary_value = action->score / (action->execution_time + cocobot_action_scheduler_time_to_reach(action));
+  float potential_elementary_value = action->score * 1000 / (action->execution_time + cocobot_action_scheduler_time_to_reach(action));
   float effective_elementary_value = action->success_proba * potential_elementary_value;
 
   return effective_elementary_value;
@@ -292,7 +292,7 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
     }
   }
 
-  if (action_best_index < 0 || action_best_eval < 0)
+  if (action_best_index < 0 || action_best_eval <= 0)
   {
     return COCOBOT_RETURN_NO_ACTION_TO_EXEC;
   }
@@ -305,6 +305,7 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
 static void cocobot_action_scheduler_list_actions(void)
 {
   unsigned int i = 0;
+  float action_value;
 
   if (action_list_end == 0)
   {
@@ -316,11 +317,19 @@ static void cocobot_action_scheduler_list_actions(void)
   {
     if (action_list[i].done)
     {
-      cocobot_console_send_answer("%s: done", action_list[i].name);
+      cocobot_console_send_answer("%s: done!", action_list[i].name);
     }
     else
     {
-      cocobot_console_send_answer("%s", action_list[i].name);
+      action_value = cocobot_action_scheduler_eval(&action_list[i]);
+
+      if (action_value == COCOBOT_ACTION_NOT_ENOUGH_TIME)
+      {
+        cocobot_console_send_answer("%s: not enough time", action_list[i].name);
+      }
+      else {
+        cocobot_console_send_answer("%s: %.3f", action_list[i].name, (double)action_value);
+      }
     }
   }
 }
