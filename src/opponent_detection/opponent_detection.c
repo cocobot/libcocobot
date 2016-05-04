@@ -80,7 +80,31 @@ void cocobot_opponent_detection_task(void * arg)
         if((fabs(_usirs[i].us - _usirs[i].us) < COCOBOT_OPPONENT_MIN_CORRELATION) && (_usirs[i].us < alert_threshold))
         {
 #ifndef AUSBEE_SIM
-          _usirs[i].alert = 1;
+          float x = cocobot_position_get_x();
+          float y = cocobot_position_get_y();
+          float a = cocobot_position_get_angle();
+
+          float dtec = _usirs[i].us + COCOBOT_ROBOT_DEPTH;
+
+          //back
+          if((i == COCOBOT_OPPONENT_DETECTION_USIR_BACK_LEFT) || (i == COCOBOT_OPPONENT_DETECTION_USIR_BACK_RIGHT))
+          {
+            dtec = -dtec;
+          }
+          float nx = x + dtec * cosf(a);
+          float ny = y + dtec * sinf(a);
+
+          if((nx < COCOBOT_OPPONENT_DETECTION_MAX_X) || 
+             (nx > -COCOBOT_OPPONENT_DETECTION_MAX_X) ||
+             (ny < COCOBOT_OPPONENT_DETECTION_MAX_Y) ||
+             (ny > -COCOBOT_OPPONENT_DETECTION_MAX_Y))
+          {
+            _usirs[i].alert = 1;
+          }
+          else
+          {
+            _usirs[i].alert = 2;
+          }
 #endif
           clear = 0;
  //         platform_gpio_set(PLATFORM_GPIO0);
@@ -117,7 +141,7 @@ int cocobot_opponent_detection_is_in_alert(void)
 
   for(i = 0; i < 4; i += 1)
   {
-    if(_usirs[i].alert)
+    if(_usirs[i].alert == 1)
     {
       return 1;
     }

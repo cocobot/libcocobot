@@ -9,6 +9,9 @@
 #define COCOBOT_OPPONENT_DETECTION_USIR_BACK_LEFT 2
 #define COCOBOT_OPPONENT_DETECTION_USIR_BACK_RIGHT 3
 
+#define COCOBOT_OPPONENT_DETECTION_MAX_X (1500 - 100)
+#define COCOBOT_OPPONENT_DETECTION_MAX_Y (1000 - 100)
+
 
 /* Initialization of the opponent detection module. Need to be called before any other action 
  * Argument:
