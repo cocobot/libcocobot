@@ -83,7 +83,7 @@ void cocobot_opponent_detection_task(void * arg)
           _usirs[i].alert = 1;
 #endif
           clear = 0;
-          platform_gpio_set(PLATFORM_GPIO0);
+ //         platform_gpio_set(PLATFORM_GPIO0);
         }
         else
         {
@@ -102,7 +102,7 @@ void cocobot_opponent_detection_task(void * arg)
 
     if(clear)
     {
-      platform_gpio_clear(PLATFORM_GPIO0);
+ //     platform_gpio_clear(PLATFORM_GPIO0);
     }
     if(force_wait)
     {
