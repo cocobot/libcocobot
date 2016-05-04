@@ -7,6 +7,10 @@
 #define NO_TRAJECTORY_AVAILABLE -1
 #define TRAJECTORY_AVAILABLE 0
 
+
+#define POINT_TO_KEEP 1
+#define NO_POINT_TO_KEEP 0
+
 /**
  * A point on the table
  * x in mm
@@ -23,12 +27,26 @@ typedef struct
     int16_t y;
 }cocobot_point_s;
 
+
 //TODO
 typedef struct
 {
     cocobot_point_s trajectory[TRAJECTORY_NBR_POINTS_MAX]; //TODO:Adjust number of points
     uint8_t nbr_points; // Number of points in the trajectory
 }cocobot_trajectory_s;
+
+typedef struct 
+{
+    int16_t x;
+    int16_t y;
+    uint8_t status;
+}cocobot_point_final_s;
+
+typedef struct 
+{
+    cocobot_point_final_s trajectory[TRAJECTORY_NBR_POINTS_MAX];
+    uint8_t nbr_points;
+}cocobot_trajectory_final_s;
 
 /**
  * Execute algorythm
@@ -146,9 +164,9 @@ uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s 
  *  - trajectory : pointer on the trajectory to linearise
  *  - threshold : max radial distance (used for the algorythm)
  * 
- * Return Value : Linearised trajectory
+ * Return Value : void
  */
-cocobot_trajectory_s cocobot_pathfinder_douglas_peucker(cocobot_trajectory_s *trajectory, float threshold);
+void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, float threshold);
 
 /**
  * Get radial distance between the point and the line passing by start and end point
@@ -159,7 +177,34 @@ cocobot_trajectory_s cocobot_pathfinder_douglas_peucker(cocobot_trajectory_s *tr
  *
  * Return Value: the distance
  */
-float cocobot_pathfinder_get_radial_distance(cocobot_point_s start, cocobot_point_s end, cocobot_point_s point);
+float cocobot_pathfinder_get_radial_distance(cocobot_point_final_s start, cocobot_point_final_s end, cocobot_point_final_s point);
+
+/**
+ * Initilize the final traj struct
+ * Arguments:
+ *  - in_traj : trajectory from pathfinder
+ *  - final_traj : trajectory used for Douglas peucker reduction
+ */
+void cocobot_pathfinder_init_final_traj(cocobot_trajectory_s *in_traj, cocobot_trajectory_final_s *final_traj);
+
+/**
+ * Get next TO_KEEP point in the Douglas Peucker trajectory
+ * Arguments:
+ *  - trajectory : pointer on the D-P traj
+ *  - start_index : index of the starting point in the traj
+ *  - target_index : index of the target point in the traj
+ */
+uint8_t cocobot_pathfinder_get_next_point(cocobot_trajectory_final_s *trajectory, uint8_t start_index, uint8_t target_index);
+
+/**
+ * Find farest (radial distance) in the traj defined by the starting point start_index and target point at target_index
+ * Arguments:
+ *  - traj : pointer on the final traj
+ *  - start_index : index of starting point 
+ *  - target_index : index of the target point in traj
+ *  - threshold : threshold used by D-P algorythm
+ */
+uint8_t cocobot_pathfinder_find_farest_point(cocobot_trajectory_final_s *traj, uint8_t start_index, uint8_t target_index, float threshold);
 
 /**
  * Concatenate two trajectories into one
@@ -186,7 +231,7 @@ void cocobot_pathfinder_cut_trajectory(cocobot_trajectory_s *base, cocobot_traje
  *
  * Return Value: point with real coordinates 
  */
-cocobot_point_s cocobot_pathfinder_get_real_coordinate(cocobot_point_s point);
+cocobot_point_s cocobot_pathfinder_get_real_coordinate(cocobot_point_final_s point);
 
 /**
  * Convert a table node into a point containing real coordonates

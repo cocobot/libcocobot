@@ -218,23 +218,41 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 
   if(left_motor_speed >= 0)
   {
+#ifdef COCOBOT_LMD18200T
+    left_motor_speed = 0xFFFF - left_motor_speed;
+#endif
     platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_LEFT);
     platform_motor_set_left_duty_cycle(left_motor_speed);
   }
   else
   {
+    left_motor_speed = -left_motor_speed;
+
+#ifdef COCOBOT_LMD18200T
+    left_motor_speed = 0xFFFF - left_motor_speed;
+#endif
     platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_LEFT);
-    platform_motor_set_left_duty_cycle(-left_motor_speed);
+    platform_motor_set_left_duty_cycle(left_motor_speed);
   }
+
   if(right_motor_speed >= 0)
   {
+#ifdef COCOBOT_LMD18200T
+    right_motor_speed = 0xFFFF - right_motor_speed;
+#endif
     platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
     platform_motor_set_right_duty_cycle(right_motor_speed);
   }
   else
   {
+    right_motor_speed = -right_motor_speed;
+
+#ifdef COCOBOT_LMD18200T
+    right_motor_speed = 0xFFFF - right_motor_speed;
+#endif
+
     platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
-    platform_motor_set_right_duty_cycle(-right_motor_speed);
+    platform_motor_set_right_duty_cycle(right_motor_speed);
   }
 #endif //AUSBEE_SIM
 }

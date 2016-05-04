@@ -2,11 +2,9 @@
 #include <task.h>
 #include <cocobot.h>
 #include <platform.h>
+#include <math.h>
 
-#define COCOBOT_OPPONENT_DETECTION_USIR_FRONT_LEFT 0
-#define COCOBOT_OPPONENT_DETECTION_USIR_FRONT_RIGHT 1
-#define COCOBOT_OPPONENT_DETECTION_USIR_BACK_LEFT 2
-#define COCOBOT_OPPONENT_DETECTION_USIR_BACK_RIGHT 3
+#define COCOBOT_OPPONENT_MIN_CORRELATION  60
 
 typedef struct
 {
@@ -27,38 +25,110 @@ typedef struct
 static cocobot_opponent_detection_usir_t _usirs[4];
 static cocobot_opponent_detection_fake_robot_t _fakebot;
 
+const int ir_lookup_table[] = {2894, 2480, 1680, 1310, 1060, 890, 790, 700, 650, 590, 500, 450, 400};
+
+static int alert_threshold;
+
+int cocobot_opponent_detection_ir_mV_to_mm(int32_t value)
+{
+  unsigned int i;
+  for(i = 0; i < sizeof(ir_lookup_table)/sizeof(int); i += 1)
+  {
+    if(ir_lookup_table[i] < value)
+    {
+      if(i == 0)
+      {
+        return 1;
+      }
+      else
+      {
+        float f1 = ir_lookup_table[i -1];
+        float f2 = ir_lookup_table[i];
+
+        float res = (value - f1) / (f2 - f1) * 50 + (i) * 50;
+
+        return res;
+      }
+    }
+  }
+  return 10000;
+}
+
 void cocobot_opponent_detection_task(void * arg)
 {
   //arg is always NULL. Prevent "variable unused" warning
   (void)arg;
 
-  TickType_t xLastWakeTime;
-  xLastWakeTime = xTaskGetTickCount();
   while(1)
   {
+    int force_wait = 1;
+    int clear = 1;
     int i;
-    for(i = 0; i < 4; i += 1)
+    for(i = 3; i >= 0; i -= 1)
     {
       if(_usirs[i].alert_activated || _usirs[i].force_on)
       {
         platform_us_send_trig(i);
-        vTaskDelay(15 / portTICK_PERIOD_MS);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
         platform_us_reset_trig(i);
-        vTaskDelay(15 / portTICK_PERIOD_MS);
+        vTaskDelay(75 / portTICK_PERIOD_MS);
         float adc_mV = platform_adc_get_mV(PLATFORM_ADC_IR0 + i);
-        _usirs[i].ir = adc_mV;
+        adc_mV = platform_adc_get_mV(PLATFORM_ADC_IR0 + i);
+        _usirs[i].ir = cocobot_opponent_detection_ir_mV_to_mm(adc_mV);
         _usirs[i].us = platform_us_get_value(i);
+
+        if((fabs(_usirs[i].us - _usirs[i].us) < COCOBOT_OPPONENT_MIN_CORRELATION) && (_usirs[i].us < alert_threshold))
+        {
+#ifndef AUSBEE_SIM
+          _usirs[i].alert = 1;
+#endif
+          clear = 0;
+ //         platform_gpio_set(PLATFORM_GPIO0);
+        }
+        else
+        {
+          _usirs[i].alert = 0;
+        }
+
+        force_wait = 0;
       }
       else
       {
         _usirs[i].ir = 0;
         _usirs[i].us = 0;
+        _usirs[i].alert = 0;
       }
     }
 
-    //wait 100ms
-    vTaskDelayUntil( &xLastWakeTime, 50 / portTICK_PERIOD_MS);
+    if(clear)
+    {
+ //     platform_gpio_clear(PLATFORM_GPIO0);
+    }
+    if(force_wait)
+    {
+      vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+    
   }
+}
+int cocobot_opponent_detection_is_in_alert(void)
+{
+  int i;
+
+  for(i = 0; i < 4; i += 1)
+  {
+    if(_usirs[i].alert)
+    {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+void cocobot_opponent_detection_set_enable(int id, int status)
+{
+  _usirs[id].alert_activated = status;
 }
 
 void cocobot_opponent_detection_init(unsigned int task_priority)
@@ -75,6 +145,7 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
     _usirs[i].force_on = 0;
   }
 
+  alert_threshold = 250;
   _fakebot.x = 0;
   _fakebot.y = 0;
   _fakebot.activated = COCOBOT_OPPONENT_DETECTION_DEACTIVATED;
@@ -90,7 +161,7 @@ int cocobot_opponent_detection_handle_console(char * command)
     int id;
     if(cocobot_console_get_iargument(0, &id))
     {
-      if((id > 0) && (id <= 4))
+      if((id >= 0) && (id < 4))
       {
         int set;
         if(cocobot_console_get_iargument(1, &set))

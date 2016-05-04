@@ -8,6 +8,7 @@
 static cocobot_node_s g_target_node;
 static cocobot_node_s g_start_node;
 static cocobot_point_s g_real_target_point;
+static cocobot_trajectory_final_s resultTraj;
 
 //char cocobot_pathfinder_internal_execute_algo(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_node_s *current_node, cocobot_list_s *open_list)
 //{
@@ -207,20 +208,36 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
 
 void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
 {
-    cocobot_trajectory_s final;
-    cocobot_pathfinder_init_trajectory(&final);
-    final = cocobot_pathfinder_douglas_peucker(trajectory, 1.0);
+    cocobot_pathfinder_init_final_traj(trajectory, &resultTraj);
+
+    cocobot_pathfinder_douglas_peucker(&resultTraj, 1.0);
     cocobot_point_s point;
 
-    for(int i = 1; i < (final.nbr_points - 1); i++)
+    for(int i = 1; i < (resultTraj.nbr_points - 1); i++)
     {
-        point = cocobot_pathfinder_get_real_coordinate(final.trajectory[i]);
-        cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-        cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d (x=%d), y=%d (y=%d)", point.x, final.trajectory[i].x, point.y, final.trajectory[i].y);
+        if(resultTraj.trajectory[i].status == POINT_TO_KEEP)
+        {
+            point = cocobot_pathfinder_get_real_coordinate(resultTraj.trajectory[i]);
+            cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+            cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d (x=%d), y=%d (y=%d)", point.x, resultTraj.trajectory[i].x, point.y, resultTraj.trajectory[i].y);
+        }
     }
     cocobot_trajectory_goto_xy(g_real_target_point.x, g_real_target_point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
     cocobot_console_send_asynchronous("LINEAR_PATH:","x= %d, y=%d", g_real_target_point.x, g_real_target_point.y);
 
+}
+
+void cocobot_pathfinder_init_final_traj(cocobot_trajectory_s *in_traj, cocobot_trajectory_final_s *final_traj)
+{
+    final_traj->trajectory[0].status = POINT_TO_KEEP;
+    int i = 0;
+    for(i = 0; i < in_traj->nbr_points; i++)
+    {
+        final_traj->trajectory[i].x = in_traj->trajectory[i].x;
+        final_traj->trajectory[i].y = in_traj->trajectory[i].y;
+    }
+    final_traj->trajectory[i].status = POINT_TO_KEEP;
+    final_traj->nbr_points = in_traj->nbr_points;
 }
 
 uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
@@ -236,17 +253,43 @@ uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s 
     return time;
 } 
 
-cocobot_trajectory_s cocobot_pathfinder_douglas_peucker(cocobot_trajectory_s *trajectory, float threshold)
+void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, float threshold)
+{
+    cocobot_console_send_asynchronous("DOUGLAS:","Starting douglas peucker algo");
+    uint8_t start_index = 0;
+    uint8_t target_index = trajectory->nbr_points - 1;
+    while(start_index != target_index)
+    {
+       if(cocobot_pathfinder_find_farest_point(trajectory, start_index, target_index, threshold) == NO_POINT_TO_KEEP)
+       {
+           start_index = target_index;
+       }
+       else
+           target_index = cocobot_pathfinder_get_next_point(trajectory, start_index, target_index);
+    }
+}
+
+uint8_t cocobot_pathfinder_get_next_point(cocobot_trajectory_final_s *trajectory, uint8_t start_index, uint8_t target_index)
+{
+    int i = start_index;
+    for(i = start_index; i <= target_index; i++)
+    {
+        if(trajectory->trajectory[i].status == POINT_TO_KEEP)
+            return i;
+    }
+    return i;
+}
+
+uint8_t cocobot_pathfinder_find_farest_point(cocobot_trajectory_final_s *traj, uint8_t start_index, uint8_t target_index, float threshold)
 {
     float d = 0.0;
     float dMax = 0.0;
     uint8_t index = 0;
-    cocobot_trajectory_s resultTraj;
-    cocobot_pathfinder_init_trajectory(&resultTraj); 
-    //get radial distance for all the points
-    for(int i = 1; i < (trajectory->nbr_points - 1); i++)
+    uint8_t returnValue = NO_POINT_TO_KEEP;
+    for(int i = start_index; i <= target_index; i++)
     {
-        d = cocobot_pathfinder_get_radial_distance(trajectory->trajectory[0], trajectory->trajectory[trajectory->nbr_points - 1], trajectory->trajectory[i]);
+        d = cocobot_pathfinder_get_radial_distance(traj->trajectory[start_index], traj->trajectory[target_index], traj->trajectory[i]);
+        cocobot_console_send_asynchronous("DOUGLAS:","dmax: %f, d: %f", (double)dMax, (double)d);
         if (d > dMax)
         {
             dMax = d;
@@ -254,30 +297,18 @@ cocobot_trajectory_s cocobot_pathfinder_douglas_peucker(cocobot_trajectory_s *tr
         }
     }
     
-    //if the farest point is above the threshold, the polyline is cut and the algorythm is performed in the 2 polylines created
     if(dMax >= threshold)
     {
-        cocobot_trajectory_s traj2;
-        cocobot_pathfinder_init_trajectory(&traj2);
-        cocobot_pathfinder_cut_trajectory(trajectory, &resultTraj, &traj2, index);
-
-        resultTraj = cocobot_pathfinder_douglas_peucker(&resultTraj, threshold);
-        traj2 = cocobot_pathfinder_douglas_peucker(&traj2, threshold);
-
-        cocobot_pathfinder_concatenate_traj(&resultTraj, &traj2);
+        resultTraj.trajectory[index].status = POINT_TO_KEEP;
+        returnValue = POINT_TO_KEEP;
     }
-    //All the point between the bounds are removed from the traj
     else
-    {
-        resultTraj.nbr_points = 2;
-        resultTraj.trajectory[0] = trajectory->trajectory[0];
-        resultTraj.trajectory[1] = trajectory->trajectory[trajectory->nbr_points - 1];
-    }
-    
-    return resultTraj;
+        returnValue = NO_POINT_TO_KEEP;
+
+    return returnValue;
 }
 
-float cocobot_pathfinder_get_radial_distance(cocobot_point_s start, cocobot_point_s end, cocobot_point_s point)
+float cocobot_pathfinder_get_radial_distance(cocobot_point_final_s start, cocobot_point_final_s end, cocobot_point_final_s point)
 {
     return fabsf(((float)(end.y - start.y)/(float)(end.x - start.x)) * (float)(point.x - start.x) - (float)point.y + (float)start.y)/sqrtf(1.0+(((float)(end.y - start.y)/(float)(end.x - start.x)) * ((float)(end.y - start.y)/(float)(end.x - start.x))));
 }
@@ -327,7 +358,7 @@ cocobot_point_s cocobot_pathfinder_get_point_from_node(cocobot_node_s *node)
     return _point;
 }
 
-cocobot_point_s cocobot_pathfinder_get_real_coordinate(cocobot_point_s point)
+cocobot_point_s cocobot_pathfinder_get_real_coordinate(cocobot_point_final_s point)
 {
     cocobot_point_s _point;
     _point.x = point.x * GRID_SIZE + GRID_SIZE/2 - TABLE_LENGTH/2;
