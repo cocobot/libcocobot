@@ -15,6 +15,7 @@ static TimerHandle_t _end_match_timer;
 static cocobot_game_state_color_t _color;
 static void * _userdata[USER_DATA_SIZE];
 static uint8_t _starter_removed;
+static TickType_t _start_time = 0;
 
 static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 {
@@ -71,6 +72,8 @@ void cocobot_game_state_wait_for_starter_removed(void)
   _starter_removed = 1;
 #endif
 
+  _start_time = xTaskGetTickCount();
+
   xTimerStart(_end_match_timer, 0);
 
   cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
@@ -81,6 +84,10 @@ cocobot_game_state_color_t cocobot_game_state_get_color(void)
   return _color;
 }
 
+int32_t cocobot_game_state_get_elapsed_time(void)
+{
+  return (xTaskGetTickCount() - _start_time) * portTICK_PERIOD_MS;
+}
 
 void cocobot_game_state_set_userdata(unsigned int id, void * data)
 {

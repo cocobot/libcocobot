@@ -28,6 +28,12 @@ uint8_t cocobot_game_state_is_starter_removed(void);
  */
 cocobot_game_state_color_t cocobot_game_state_get_color(void);
 
+/* Get time elapsed in ms since starter has been removed
+ * Return:
+ *  - an integer for the time elapsed in ms
+ */
+int32_t cocobot_game_state_get_elapsed_time(void);
+
 /* Add container for user data available from everywhere in the code.
  * It is designed to contain "year-specific" daa
  * Argument:

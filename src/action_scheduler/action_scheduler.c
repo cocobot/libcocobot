@@ -47,7 +47,6 @@ static cocobot_action_t action_list[SCHEDULER_MAX_ACTIONS];
 static unsigned int action_list_end;
 
 #define INITIAL_REMAINING_TIME 90000
-static TickType_t start_time = 0;
 
 static struct cocobot_game_state_t
 {
@@ -89,9 +88,6 @@ void cocobot_action_scheduler_set_pause(int paused)
 
 void cocobot_action_scheduler_start(void)
 {
-  start_time = xTaskGetTickCount();
-
-
   while(1)
   {
     if (current_game_state.paused)
@@ -108,8 +104,7 @@ void cocobot_action_scheduler_start(void)
 
 static void cocobot_action_scheduler_update_game_state(void)
 {
-  current_game_state.remaining_time = INITIAL_REMAINING_TIME -
-                                      (xTaskGetTickCount() - start_time) * portTICK_PERIOD_MS;
+  current_game_state.remaining_time = INITIAL_REMAINING_TIME - cocobot_game_state_get_elapsed_time();
 
   current_game_state.robot_pos.x = cocobot_position_get_x();
   current_game_state.robot_pos.y = cocobot_position_get_y();
