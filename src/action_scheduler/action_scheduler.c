@@ -140,6 +140,16 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
   }
 }
 
+static void cocobot_action_scheduler_print_action(cocobot_action_t * action)
+{
+  cocobot_console_send_answer("\t score: %d", action->score);
+  cocobot_console_send_answer("\t pos: (x = %.1f mm, y = %.1f, a = %.2f deg)",
+      (double)action->pos.x, (double)action->pos.y, (double)action->pos.a);
+  cocobot_console_send_answer("\t execution time: %ld", action->execution_time);
+  cocobot_console_send_answer("\t success proba: %.2f", (double)action->success_proba);
+  cocobot_console_send_answer("\t done: %d", action->done);
+}
+
 /* Returns the approximate time (in ms) needed by the robot to reach the action's
  * starting point, based on the average robot linear speed set by the user.
  * By default, this time is set to 0 ms.
@@ -297,6 +307,23 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
   return cocobot_action_scheduler_execute_action(best_action);
 }
 
+
+static void cocobot_action_scheduler_print_action_by_name(char name[ACTION_NAME_LENGTH])
+{
+  unsigned int action_current_index = 0;
+
+  for (; action_current_index < action_list_end; action_current_index++)
+  {
+    if (strncmp(name, action_list[action_current_index].name, ACTION_NAME_LENGTH) == 0)
+    {
+      cocobot_action_scheduler_print_action(&action_list[action_current_index]);
+      return;
+    }
+  }
+
+  cocobot_console_send_answer("No action with name: %s", name);
+}
+
 static void cocobot_action_scheduler_list_actions(void)
 {
   unsigned int i = 0;
@@ -366,6 +393,15 @@ int cocobot_action_scheduler_handle_console(char * command)
   if(strcmp(command,"list_actions") == 0)
   {
     cocobot_action_scheduler_list_actions();
+    return 1;
+  }
+  if(strcmp(command,"print_action") == 0)
+  {
+    char action_name[ACTION_NAME_LENGTH];
+    if(cocobot_console_get_sargument(0, action_name, sizeof(action_name)))
+    {
+      cocobot_action_scheduler_print_action_by_name(action_name);
+    }
     return 1;
   }
   if(strcmp(command,"action_pause") == 0)
