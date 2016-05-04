@@ -91,12 +91,12 @@ void cocobot_opponent_detection_task(void * arg)
           {
             dtec = -dtec;
           }
-          float nx = x + dtec * cosf(a);
-          float ny = y + dtec * sinf(a);
+          float nx = x + dtec * cosf(a * M_PI / 180.0);
+          float ny = y + dtec * sinf(a * M_PI / 180.0);
 
-          if((nx < COCOBOT_OPPONENT_DETECTION_MAX_X) || 
-             (nx > -COCOBOT_OPPONENT_DETECTION_MAX_X) ||
-             (ny < COCOBOT_OPPONENT_DETECTION_MAX_Y) ||
+          if((nx < COCOBOT_OPPONENT_DETECTION_MAX_X) && 
+             (nx > -COCOBOT_OPPONENT_DETECTION_MAX_X) &&
+             (ny < COCOBOT_OPPONENT_DETECTION_MAX_Y) &&
              (ny > -COCOBOT_OPPONENT_DETECTION_MAX_Y))
           {
             _usirs[i].alert = 1;
