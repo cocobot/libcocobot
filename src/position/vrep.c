@@ -3,7 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <math.h>
 #include "extApi.h"
+#include "generated/autoconf.h"
+
+#define WHEEL_RADIUS_IN_METER (0.0325)
+
+#define VREPPOS2TICK(pos)  ((pos / (2*M_PI) * WHEEL_RADIUS_IN_METER) * (float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_METER)
+
+#define MAX_SPEED_IN_M_PER_S ((float)CONFIG_LIBCOCOBOT_DIST_RAMP_MAX_SPEED / 10000)
+#define MAX_SPEED_IN_RAD_PER_S (MAX_SPEED_IN_M_PER_S / WHEEL_RADIUS_IN_METER)
 
 typedef struct
 {
@@ -119,8 +128,8 @@ void cocobot_vrep_get_motor_position(int32_t motor_position[2])
 
   if(buffer_from_vrep_sync.initialized)
   {
-    motor_position[0] = (int32_t)buffer_from_vrep_sync.left_motor_position;
-    motor_position[1] = (int32_t)buffer_from_vrep_sync.right_motor_position;
+    motor_position[0] = (int32_t)VREPPOS2TICK(buffer_from_vrep_sync.left_motor_position);
+    motor_position[1] = (int32_t)VREPPOS2TICK(buffer_from_vrep_sync.right_motor_position);
   }
 }
 
@@ -129,6 +138,11 @@ void cocobot_vrep_set_motor_command(float left_motor_speed, float right_motor_sp
   cocobot_to_vrep_t buffer_to_vrep_unsync;
 
   buffer_to_vrep_unsync.initialized = 1;
+
+  // Converting pwm on 16 bits to vrep motor speed
+  left_motor_speed  = MAX_SPEED_IN_RAD_PER_S * left_motor_speed  / 0xffff;
+  right_motor_speed = MAX_SPEED_IN_RAD_PER_S * right_motor_speed / 0xffff;
+
   buffer_to_vrep_unsync.left_motor_speed = left_motor_speed;
   buffer_to_vrep_unsync.right_motor_speed = right_motor_speed;
 

@@ -179,6 +179,23 @@ float cocobot_position_get_speed_angle(void)
 
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
 {
+  if(left_motor_speed > 0xffff)
+  {
+    left_motor_speed = 0xffff;
+  }
+  if(left_motor_speed < -0xffff)
+  {
+    left_motor_speed = -0xffff;
+  }
+  if(right_motor_speed > 0xffff)
+  {
+    right_motor_speed = 0xffff;
+  }
+  if(right_motor_speed < -0xffff)
+  {
+    right_motor_speed = -0xffff;
+  }
+
 #ifdef AUSBEE_SIM
   if(!fake_vrep)
   {
@@ -197,24 +214,6 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 #ifdef COCOBOT_INVERT_RIGHT_MOTOR
   right_motor_speed = -right_motor_speed;
 #endif
-
-
-  if(left_motor_speed > 0xffff)
-  {
-    left_motor_speed = 0xffff;
-  }
-  if(left_motor_speed < -0xffff)
-  {
-    left_motor_speed = -0xffff;
-  }
-  if(right_motor_speed > 0xffff)
-  {
-    right_motor_speed = 0xffff;
-  }
-  if(right_motor_speed < -0xffff)
-  {
-    right_motor_speed = -0xffff;
-  }
 
   if(left_motor_speed >= 0)
   {
