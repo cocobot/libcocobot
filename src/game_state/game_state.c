@@ -86,6 +86,11 @@ cocobot_game_state_color_t cocobot_game_state_get_color(void)
 
 int32_t cocobot_game_state_get_elapsed_time(void)
 {
+  if(_start_time == 0)
+  {
+    return 0;
+  }
+
   return (xTaskGetTickCount() - _start_time) * portTICK_PERIOD_MS;
 }
 
