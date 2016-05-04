@@ -205,7 +205,7 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
   }
   if(left_motor_speed < -0xffff)
   {
-    left_motor_speed = 0xffff;
+    left_motor_speed = -0xffff;
   }
   if(right_motor_speed > 0xffff)
   {
@@ -213,7 +213,7 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
   }
   if(right_motor_speed < -0xffff)
   {
-    right_motor_speed = 0xffff;
+    right_motor_speed = -0xffff;
   }
 
   if(left_motor_speed >= 0)
