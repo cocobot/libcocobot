@@ -106,6 +106,10 @@ void cocobot_action_scheduler_start(void)
       //wait small delay if no action is available (which is a bad thing)
       vTaskDelay(100 / portTICK_PERIOD_MS);
     }
+    else
+    {
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
   }
 }
 
