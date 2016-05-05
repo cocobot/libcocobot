@@ -55,6 +55,7 @@ static struct cocobot_game_state_t
   float               robot_average_linear_speed; // in m/s (or mm/ms)
   int32_t             remaining_time; // in ms
   int                 paused;
+  int                 use_pathfinder;
 } current_game_state;
 
 
@@ -67,6 +68,7 @@ void cocobot_action_scheduler_init(void)
   current_game_state.robot_average_linear_speed = 0;
   current_game_state.remaining_time = INITIAL_REMAINING_TIME;
   current_game_state.paused = 0;
+  current_game_state.use_pathfinder = 0;
 
   action_list_end = 0;
 }
@@ -84,6 +86,11 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed)
 void cocobot_action_scheduler_set_pause(int paused)
 {
   current_game_state.paused = paused;
+}
+
+void cocobot_action_scheduler_use_pathfinder(int use_pathfinder)
+{
+  current_game_state.use_pathfinder = use_pathfinder;
 }
 
 void cocobot_action_scheduler_start(void)
@@ -214,8 +221,15 @@ static cocobot_action_goto_return_value_t cocobot_action_scheduler_goto(cocobot_
   float x, y, a;
   (*action->pos)(action->callback_arg, &x, &y, &a);
 
- // cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), action->pos.x, action->pos.y);
-  cocobot_trajectory_goto_xy(x , y, -1);
+  if (current_game_state.use_pathfinder)
+  {
+    cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), x, y);
+  }
+  else
+  {
+    cocobot_trajectory_goto_xy(x , y, -1);
+  }
+
   if (!isnan(a)) {
     cocobot_trajectory_goto_a(a, -1);
   }

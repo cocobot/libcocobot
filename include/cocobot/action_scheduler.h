@@ -71,6 +71,12 @@ void cocobot_action_scheduler_set_average_linear_speed(float speed);
  */
 void cocobot_action_scheduler_set_pause(int paused);
 
+/* Set scheduler goto function
+ * Argument:
+ * - use_pathfinder: use pathfinder if 1 or use simple goto_xy if 0
+ */
+void cocobot_action_scheduler_use_pathfinder(int use_pathfinder);
+
 /* Start internal variables computation and starts unfinite loop to handle
  * actions execution.
  */
