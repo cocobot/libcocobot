@@ -7,25 +7,26 @@
 #define TABLE_WIDTH 2000
 #define MAXIMUM_NODE_IN_LIST 200
 #define GRID_SIZE 50
-#define MASK_NEW_NODE 0xF0
+#define MASK_NEW_NODE 0xF00
 
 typedef enum
 {
-    NEW_NODE = 0x00,
-    OBSTACLE = 0x10,
-    FORBIDDEN = 0x20, // Zone where the robot can't go
-    SOFT_OBSTACLE = 0x30, //Zone where the robot can eventually go but must be cautious when turning
-    CLOSED_LIST = 0x01,
-    FINAL_TRAJ = 0x02,
-    OPEN_LIST = 0x03,
-    ROBOT = 0x04
+    NEW_NODE = 0x100,
+    OBSTACLE = 0x200,
+    FORBIDDEN = 0x400, // Zone where the robot can't go
+    SOFT_OBSTACLE = 0x300, //Zone where the robot can eventually go but must be cautious when turning
+    CLOSED_LIST = 0x001,
+    FINAL_TRAJ = 0x002,
+    OPEN_LIST = 0x004,
+    ROBOT = 0x008,
+    TEMPORARY_ALLOWED = 0x010
 }cocobot_nodeType_e;
 
 typedef struct
 {
     char x;
     char y;
-    uint8_t nodeType; //is a cocobot_nodeType_e cast in uint8_t to be sure of the size
+    uint16_t nodeType; //is a cocobot_nodeType_e cast in uint16_t to be sure of the size
     float cost;
     char pX;
     char pY;
@@ -50,6 +51,8 @@ typedef struct
  *  
  */
 void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
+
+void cocobot_pathfinder_set_start_zone_allowed();
 
 /**
  * Reset the table to initial state

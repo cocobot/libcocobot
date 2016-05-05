@@ -31,6 +31,11 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
 char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y);
 
 /**
+ * Allow the entire start zone for pathfinder
+ */
+void cocobot_pathfinder_allow_start_zone();
+
+/**
  * Initialize the pathFinder
  * Arguments : 
  *  - robot_length (mm)
