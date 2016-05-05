@@ -364,7 +364,15 @@ static void cocobot_action_scheduler_debug_actions(void)
   for (; i < action_list_end; i++)
   {
     cocobot_action_t * action = &action_list[i];
-    action_value = cocobot_action_scheduler_eval(action);
+
+    if (action_list[i].done)
+    {
+      action_value = COCOBOT_ACTION_ALREADY_DONE;
+    }
+    else
+    {
+      action_value = cocobot_action_scheduler_eval(action);
+    }
 
     cocobot_console_send_answer("%s,%.0f,%.0f,%0.3f", action->name, (double)action->pos.x, (double)action->pos.y, (double)action_value);
   }
@@ -379,6 +387,7 @@ int cocobot_action_scheduler_handle_console(char * command)
 
     if(cocobot_console_get_sargument(0, action_name, sizeof(action_name)))
     {
+      // TODO: Warning cannot be used inside this task
       res = cocobot_action_scheduler_execute_action_by_name(action_name);
       switch(res)
       {
