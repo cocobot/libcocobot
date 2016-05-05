@@ -36,12 +36,14 @@ typedef enum
 // Should return a strictly positive value if execution was done correctly.
 // Should return a strictly negative value when action could not be fully
 // executed and should be done later.
+// Argument is callback_arg
 typedef cocobot_action_callback_result_t (*action_callback)(void *);
 
 typedef int (*action_unlocked)(void);
 
 // Function for the user to give dynamics coordinates to actions
-typedef void (*action_pos)(float * x, float * y, float * a);
+// First argument is callback_arg
+typedef void (*action_pos)(void *, float * x, float * y, float * a);
 
 /* Init scheduler and game's state. Must be called once before any other function.
  */

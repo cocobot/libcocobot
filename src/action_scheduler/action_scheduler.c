@@ -144,7 +144,7 @@ static void cocobot_action_scheduler_print_action(cocobot_action_t * action)
 {
   cocobot_console_send_answer("\t score: %d", action->score);
   float x, y, a;
-  (*action->pos)(&x, &y, &a);
+  (*action->pos)(action->callback_arg, &x, &y, &a);
   cocobot_console_send_answer("\t pos: (x = %.1f mm, y = %.1f, a = %.2f deg)",
       (double)x, (double)y, (double)a);
   cocobot_console_send_answer("\t execution time: %ld", action->execution_time);
@@ -166,7 +166,7 @@ static float cocobot_action_scheduler_time_to_reach(cocobot_action_t * action)
   }
 
   float action_x, action_y, action_a;
-  (*action->pos)(&action_x, &action_y, &action_a);
+  (*action->pos)(action->callback_arg, &action_x, &action_y, &action_a);
   float x = current_game_state.robot_pos.x - action_x;
   float y = current_game_state.robot_pos.y - action_y;
   // 2 is a factor to approximate the length of the real path from the
@@ -212,7 +212,7 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 static cocobot_action_goto_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
 {
   float x, y, a;
-  (*action->pos)(&x, &y, &a);
+  (*action->pos)(action->callback_arg, &x, &y, &a);
 
  // cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), action->pos.x, action->pos.y);
   cocobot_trajectory_goto_xy(x , y, -1);
@@ -374,7 +374,7 @@ static void cocobot_action_scheduler_debug_actions(void)
     cocobot_action_t * action = &action_list[i];
     action_value = cocobot_action_scheduler_eval(action);
 
-    (*action->pos)(&x, &y, &a);
+    (*action->pos)(action->callback_arg, &x, &y, &a);
 
     cocobot_console_send_answer("%s,%.0f,%.0f,%0.3f", action->name, (double)x, (double)y, (double)action_value);
   }
