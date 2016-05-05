@@ -243,14 +243,11 @@ static cocobot_action_callback_result_t cocobot_action_scheduler_execute_action(
     (*action->preexec_callback)(action->callback_arg);
   }
 
-  cocobot_console_send_asynchronous("debug", "Going to action: %s", action->name);
-
   cocobot_action_callback_result_t action_return_value = COCOBOT_RETURN_ACTION_NOT_REACHED;
   cocobot_action_goto_return_value_t goto_return_value = cocobot_action_scheduler_goto(action);
 
   if (goto_return_value == COCOBOT_ACTION_REACHED)
   {
-    cocobot_console_send_asynchronous("debug", "Executing action: %s", action->name);
     action_return_value = (*action->exec_callback)(action->callback_arg);
   }
 
