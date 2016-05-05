@@ -425,7 +425,7 @@ int cocobot_action_scheduler_handle_console(char * command)
     {
       cocobot_action_scheduler_set_pause(paused);
     }
-    cocobot_console_send_answer("Paused: %d", current_game_state.paused);
+    cocobot_console_send_answer("%d", current_game_state.paused);
     return 1;
   }
   if(strcmp(command,"debug_actions") == 0)
