@@ -3,8 +3,11 @@
 
 #include "cocobot/pathfinder_table.h"
 
-#define TRAJECTORY_NBR_POINTS_MAX 160
+#define TRAJECTORY_NBR_POINTS_MAX   160
 
+#define DESTINATION_NOT_AVAILABLE   0
+#define NO_ROUTE_TO_TARGET          1
+#define TRAJECTORY_READY            2
 
 /**
  * Get execution time to go from starting point to target point
