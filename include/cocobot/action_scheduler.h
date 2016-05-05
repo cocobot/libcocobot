@@ -40,6 +40,9 @@ typedef cocobot_action_callback_result_t (*action_callback)(void *);
 
 typedef int (*action_unlocked)(void);
 
+// Function for the user to give dynamics coordinates to actions
+typedef void (*action_pos)(float * x, float * y, float * a);
+
 /* Init scheduler and game's state. Must be called once before any other function.
  */
 void cocobot_action_scheduler_init(void);
@@ -74,9 +77,10 @@ void cocobot_action_scheduler_start(void);
  * Argument:
  *  - name:             action's name
  *  - score:            points given when action succeed
- *  - x, y, a:          position (mm) and angle (deg), relatively to the table,
- *  to start the action. The angle value is optional and can be replaced by
- *  NAN defined in math.h if it should not be used
+ *  - coordinates:      function returning x, y position (mm) and angle (deg) through its args.
+ *  Coordinates to start the action are relative to the table. The angle value
+ *  is optional and can be replaced by NAN defined in math.h if it should not
+ *  be used.
  *  - execution_time:   time needed to guarantee the action's full execution (in ms)
  *  - success_proba:    probability that the action succeed when doing it (between 0 and 1)
  *  - preexec_callback: function to call when action before the robot moves to
@@ -89,7 +93,7 @@ void cocobot_action_scheduler_start(void);
  *  executed (can be set to NULL if action is always unlocked)
  */
 void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
-    unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
+    unsigned int score, action_pos pos, int32_t execution_time, float success_proba,
     action_callback preexec_callback, action_callback exec_callback,
     action_callback cleanup_callback, void * callback_arg, action_unlocked unlocked);
 

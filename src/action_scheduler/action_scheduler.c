@@ -32,7 +32,7 @@ typedef struct
 {
   char            name[ACTION_NAME_LENGTH];
   unsigned int    score;
-  cocobot_pos_t   pos;
+  action_pos      pos;
   int32_t         execution_time;
   float           success_proba;
   action_callback preexec_callback;
@@ -112,23 +112,23 @@ static void cocobot_action_scheduler_update_game_state(void)
 }
 
 void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
-    unsigned int score, float x, float y, float a, int32_t execution_time, float success_proba,
+    unsigned int score, action_pos pos, int32_t execution_time, float success_proba,
     action_callback preexec_callback, action_callback exec_callback,
     action_callback cleanup_callback, void * callback_arg, action_unlocked unlocked)
 {
-  strncpy(action_list[action_list_end].name, name, ACTION_NAME_LENGTH);
-  action_list[action_list_end].score = score;
-  action_list[action_list_end].pos.x = x;
-  action_list[action_list_end].pos.y = y;
-  action_list[action_list_end].pos.a = a;
-  action_list[action_list_end].execution_time = execution_time;
-  action_list[action_list_end].success_proba = success_proba;
-  action_list[action_list_end].preexec_callback = preexec_callback;
-  action_list[action_list_end].exec_callback = exec_callback;
-  action_list[action_list_end].cleanup_callback = cleanup_callback;
-  action_list[action_list_end].callback_arg = callback_arg;
-  action_list[action_list_end].unlocked = unlocked;
-  action_list[action_list_end].done = 0;
+  cocobot_action_t * new_action = &action_list[action_list_end];
+
+  strncpy(new_action->name, name, ACTION_NAME_LENGTH);
+  new_action->score = score;
+  new_action->pos = pos;
+  new_action->execution_time = execution_time;
+  new_action->success_proba = success_proba;
+  new_action->preexec_callback = preexec_callback;
+  new_action->exec_callback = exec_callback;
+  new_action->cleanup_callback = cleanup_callback;
+  new_action->callback_arg = callback_arg;
+  new_action->unlocked = unlocked;
+  new_action->done = 0;
 
   if (action_list_end < SCHEDULER_MAX_ACTIONS-1)
   {
@@ -143,8 +143,10 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
 static void cocobot_action_scheduler_print_action(cocobot_action_t * action)
 {
   cocobot_console_send_answer("\t score: %d", action->score);
+  float x, y, a;
+  (*action->pos)(&x, &y, &a);
   cocobot_console_send_answer("\t pos: (x = %.1f mm, y = %.1f, a = %.2f deg)",
-      (double)action->pos.x, (double)action->pos.y, (double)action->pos.a);
+      (double)x, (double)y, (double)a);
   cocobot_console_send_answer("\t execution time: %ld", action->execution_time);
   cocobot_console_send_answer("\t success proba: %.2f", (double)action->success_proba);
   cocobot_console_send_answer("\t done: %d", action->done);
@@ -163,8 +165,10 @@ static float cocobot_action_scheduler_time_to_reach(cocobot_action_t * action)
     return 0;
   }
 
-  float x = current_game_state.robot_pos.x - action->pos.x;
-  float y = current_game_state.robot_pos.y - action->pos.y;
+  float action_x, action_y, action_a;
+  (*action->pos)(&action_x, &action_y, &action_a);
+  float x = current_game_state.robot_pos.x - action_x;
+  float y = current_game_state.robot_pos.y - action_y;
   // 2 is a factor to approximate the length of the real path from the
   // straight-line distance between the two points
   float approximate_linear_distance = 2 * EUCLIDEAN_DISTANCE(x, y);
@@ -207,10 +211,13 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 // TODO: should be replaced by a pathfinder function, with more return code
 static cocobot_action_goto_return_value_t cocobot_action_scheduler_goto(cocobot_action_t * action)
 {
+  float x, y, a;
+  (*action->pos)(&x, &y, &a);
+
  // cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), action->pos.x, action->pos.y);
-  cocobot_trajectory_goto_xy(action->pos.x , action->pos.y, -1);
-  if (!isnan(action->pos.a)) {
-    cocobot_trajectory_goto_a(action->pos.a, -1);
+  cocobot_trajectory_goto_xy(x , y, -1);
+  if (!isnan(a)) {
+    cocobot_trajectory_goto_a(a, -1);
   }
   cocobot_trajectory_wait();
 
@@ -360,13 +367,16 @@ static void cocobot_action_scheduler_debug_actions(void)
 {
   unsigned int i = 0;
   float action_value;
+  float x, y, a;
 
   for (; i < action_list_end; i++)
   {
     cocobot_action_t * action = &action_list[i];
     action_value = cocobot_action_scheduler_eval(action);
 
-    cocobot_console_send_answer("%s,%.0f,%.0f,%0.3f", action->name, (double)action->pos.x, (double)action->pos.y, (double)action_value);
+    (*action->pos)(&x, &y, &a);
+
+    cocobot_console_send_answer("%s,%.0f,%.0f,%0.3f", action->name, (double)x, (double)y, (double)action_value);
   }
 }
 
