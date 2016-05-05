@@ -61,7 +61,7 @@ void cocobot_asserv_init(void)
 
 float cocobot_asserv_get_linear_speed(void)
 {
-  return cocobot_asserv_ramp_get_max_speed(&_ramp_dist) * 10.0f;
+  return cocobot_asserv_ramp_get_max_speed(&_ramp_dist) / 10.0f;
 }
 
 void cocobot_asserv_compute(void)
