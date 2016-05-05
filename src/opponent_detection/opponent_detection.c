@@ -4,7 +4,7 @@
 #include <platform.h>
 #include <math.h>
 
-#define COCOBOT_OPPONENT_MIN_CORRELATION  60
+#define COCOBOT_OPPONENT_MIN_CORRELATION  150
 
 typedef struct
 {
@@ -77,7 +77,7 @@ void cocobot_opponent_detection_task(void * arg)
         _usirs[i].ir = cocobot_opponent_detection_ir_mV_to_mm(adc_mV);
         _usirs[i].us = platform_us_get_value(i);
 
-        if((fabs(_usirs[i].us - _usirs[i].us) < COCOBOT_OPPONENT_MIN_CORRELATION) && (_usirs[i].us < alert_threshold))
+        if((fabs(_usirs[i].us - _usirs[i].ir) < COCOBOT_OPPONENT_MIN_CORRELATION) && (_usirs[i].us < alert_threshold))
         {
 #ifndef AUSBEE_SIM
           float x = cocobot_position_get_x();
