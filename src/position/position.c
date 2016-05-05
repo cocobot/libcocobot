@@ -344,7 +344,10 @@ void cocobot_position_set_x(float x)
   robot_x = MM2TICK(x);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-  cocobot_vrep_position_set_x(x);
+  if(!fake_vrep)
+  {
+    cocobot_vrep_position_set_x(x);
+  }
 #endif
 
   cocobot_asserv_set_state(saved_state);
@@ -360,7 +363,10 @@ void cocobot_position_set_y(float y)
   robot_y = MM2TICK(y);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-  cocobot_vrep_position_set_y(y);
+  if(!fake_vrep)
+  {
+    cocobot_vrep_position_set_y(y);
+  }
 #endif
 
   cocobot_asserv_set_state(saved_state);
@@ -378,7 +384,10 @@ void cocobot_position_set_angle(float angle)
   robot_angle_offset += DEG2TICK(diff);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-  cocobot_vrep_position_set_angle(angle);
+  if(!fake_vrep)
+  {
+    cocobot_vrep_position_set_angle(angle);
+  }
 #endif
 
   cocobot_asserv_set_state(saved_state);
