@@ -43,7 +43,7 @@ typedef int (*action_unlocked)(void);
 
 // Function for the user to give dynamics coordinates to actions
 // First argument is callback_arg
-typedef void (*action_pos)(void *, float * x, float * y, float * a);
+typedef void (*action_pos)(void *, float *x, float *y, float *a);
 
 /* Init scheduler and game's state. Must be called once before any other function.
  */
@@ -97,7 +97,7 @@ void cocobot_action_scheduler_start(void);
 void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
     unsigned int score, action_pos pos, int32_t execution_time, float success_proba,
     action_callback preexec_callback, action_callback exec_callback,
-    action_callback cleanup_callback, void * callback_arg, action_unlocked unlocked);
+    action_callback cleanup_callback, void *callback_arg, action_unlocked unlocked);
 
 /* Execute the action with the given name
  * Argument:
