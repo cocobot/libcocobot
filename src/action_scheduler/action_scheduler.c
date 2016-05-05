@@ -359,6 +359,20 @@ static void cocobot_action_scheduler_list_actions(void)
   }
 }
 
+static void cocobot_action_scheduler_debug_actions(void)
+{
+  unsigned int i = 0;
+  float action_value;
+
+  for (; i < action_list_end; i++)
+  {
+    cocobot_action_t * action = &action_list[i];
+    action_value = cocobot_action_scheduler_eval(action);
+
+    cocobot_console_send_answer("%.0f,%.0f,%0.3f", (double)action->pos.x, (double)action->pos.y, (double)action_value);
+  }
+}
+
 int cocobot_action_scheduler_handle_console(char * command)
 {
   if(strcmp(command,"exec_action") == 0)
@@ -415,6 +429,11 @@ int cocobot_action_scheduler_handle_console(char * command)
       cocobot_action_scheduler_set_pause(paused);
     }
     cocobot_console_send_answer("Paused: %d", current_game_state.paused);
+    return 1;
+  }
+  if(strcmp(command,"debug_actions") == 0)
+  {
+    cocobot_action_scheduler_debug_actions();
     return 1;
   }
 
