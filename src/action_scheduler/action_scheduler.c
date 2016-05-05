@@ -369,7 +369,7 @@ static void cocobot_action_scheduler_debug_actions(void)
     cocobot_action_t * action = &action_list[i];
     action_value = cocobot_action_scheduler_eval(action);
 
-    cocobot_console_send_answer("%s,%.0f,%.0f,%0.3f", action->name(double)action->pos.x, (double)action->pos.y, (double)action_value);
+    cocobot_console_send_answer("%s,%.0f,%.0f,%0.3f", action->name, (double)action->pos.x, (double)action->pos.y, (double)action_value);
   }
 }
 
