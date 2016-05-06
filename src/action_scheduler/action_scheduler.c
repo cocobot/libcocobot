@@ -17,9 +17,9 @@ typedef enum
 
 typedef enum
 {
-  COCOBOT_ACTION_LOCKED = -1,
-  COCOBOT_ACTION_ALREADY_DONE = -2,
-  COCOBOT_ACTION_NOT_ENOUGH_TIME = -3,
+  COCOBOT_ACTION_ALREADY_DONE    = -3,
+  COCOBOT_ACTION_LOCKED          = -2,
+  COCOBOT_ACTION_NOT_ENOUGH_TIME = -1,
 } cocobot_action_eval_return_value_t;
 
 typedef struct
@@ -56,6 +56,7 @@ static struct cocobot_game_state_t
   int32_t             remaining_time; // in ms
   int                 paused;
   int                 use_pathfinder;
+  int                 time_gets_short;
 } current_game_state;
 
 
@@ -69,6 +70,7 @@ void cocobot_action_scheduler_init(void)
   current_game_state.remaining_time = INITIAL_REMAINING_TIME;
   current_game_state.paused = 0;
   current_game_state.use_pathfinder = 0;
+  current_game_state.time_gets_short = 0;
 
   action_list_end = 0;
 }
@@ -206,16 +208,26 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
   {
     return COCOBOT_ACTION_LOCKED;
   }
-  if (action->execution_time > current_game_state.remaining_time)
+
+  float time_value = 1000 / (action->execution_time + cocobot_action_scheduler_time_to_reach(action));
+
+  if (current_game_state.time_gets_short)
   {
-    return COCOBOT_ACTION_NOT_ENOUGH_TIME;
+    return time_value;
   }
+  else
+  {
+    if (action->execution_time > current_game_state.remaining_time)
+    {
+      return COCOBOT_ACTION_NOT_ENOUGH_TIME;
+    }
 
-  // TODO: Take strategy and remaining time to execute other actions into account
-  float potential_elementary_value = action->score * 1000 / (action->execution_time + cocobot_action_scheduler_time_to_reach(action));
-  float effective_elementary_value = action->success_proba * potential_elementary_value;
+    // TODO: Take strategy and remaining time to execute other actions into account
+    float potential_elementary_value = action->score * time_value;
+    float effective_elementary_value = action->success_proba * potential_elementary_value;
 
-  return effective_elementary_value;
+    return effective_elementary_value;
+  }
 }
 
 // TODO: should be replaced by a pathfinder function, with more return code
@@ -308,7 +320,7 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
   unsigned int action_current_index = 0;
   int action_best_index = -1;
   float action_current_eval = 0;
-  float action_best_eval = -1;
+  float action_best_eval = -3;
 
   // Compute best action
   for (; action_current_index < action_list_end; action_current_index++)
@@ -321,7 +333,13 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
     }
   }
 
-  if (action_best_index < 0 || action_best_eval <= 0)
+  if (action_best_eval == COCOBOT_ACTION_NOT_ENOUGH_TIME)
+  {
+    // Only remaining action take too much time, we still try the quickest one
+    current_game_state.time_gets_short = 1;
+    return cocobot_action_scheduler_execute_best_action();
+  }
+  else if (action_best_eval <= 0)
   {
     return COCOBOT_RETURN_NO_ACTION_TO_EXEC;
   }
@@ -392,14 +410,7 @@ static void cocobot_action_scheduler_debug_actions(void)
   {
     cocobot_action_t * action = &action_list[i];
 
-    if (action_list[i].done)
-    {
-      action_value = COCOBOT_ACTION_ALREADY_DONE;
-    }
-    else
-    {
-      action_value = cocobot_action_scheduler_eval(action);
-    }
+    action_value = cocobot_action_scheduler_eval(action);
 
     (*action->pos)(action->callback_arg, &x, &y, &a);
 
