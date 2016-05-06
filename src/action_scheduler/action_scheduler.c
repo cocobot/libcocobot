@@ -198,18 +198,17 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
 {
   cocobot_action_scheduler_update_game_state();
 
-  if (action->execution_time > current_game_state.remaining_time)
-  {
-    return COCOBOT_ACTION_NOT_ENOUGH_TIME;
-  }
   if (action->done)
   {
     return COCOBOT_ACTION_ALREADY_DONE;
-
   }
   if (action->unlocked != NULL && !action->unlocked())
   {
     return COCOBOT_ACTION_LOCKED;
+  }
+  if (action->execution_time > current_game_state.remaining_time)
+  {
+    return COCOBOT_ACTION_NOT_ENOUGH_TIME;
   }
 
   // TODO: Take strategy and remaining time to execute other actions into account
@@ -362,21 +361,23 @@ static void cocobot_action_scheduler_list_actions(void)
 
   for (; i < action_list_end; i++)
   {
-    if (action_list[i].done)
+    action_value = cocobot_action_scheduler_eval(&action_list[i]);
+
+    if (action_value == COCOBOT_ACTION_ALREADY_DONE)
     {
       cocobot_console_send_answer("%s: done!", action_list[i].name);
     }
+    else if (action_value == COCOBOT_ACTION_LOCKED)
+    {
+      cocobot_console_send_answer("%s: locked!", action_list[i].name);
+    }
+    else if (action_value == COCOBOT_ACTION_NOT_ENOUGH_TIME)
+    {
+      cocobot_console_send_answer("%s: not enough time", action_list[i].name);
+    }
     else
     {
-      action_value = cocobot_action_scheduler_eval(&action_list[i]);
-
-      if (action_value == COCOBOT_ACTION_NOT_ENOUGH_TIME)
-      {
-        cocobot_console_send_answer("%s: not enough time", action_list[i].name);
-      }
-      else {
-        cocobot_console_send_answer("%s: %.3f", action_list[i].name, (double)action_value);
-      }
+      cocobot_console_send_answer("%s: %.3f", action_list[i].name, (double)action_value);
     }
   }
 }
