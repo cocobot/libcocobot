@@ -698,6 +698,7 @@ void cocobot_trajectory_task(void * arg)
         if((xTaskGetTickCount() - order->start.time) * portTICK_PERIOD_MS > order->time)
         {
           status = COCOBOT_TRAJECTORY_ORDER_DONE;
+          result = COCOBOT_TRAJECTORY_TIMEOUT_BEFORE_END;
 
           cocobot_asserv_set_distance_set_point(cocobot_position_get_distance());
           cocobot_asserv_set_angular_set_point(cocobot_position_get_angle());
