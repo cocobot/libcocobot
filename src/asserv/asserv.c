@@ -59,6 +59,13 @@ void cocobot_asserv_init(void)
   cocobot_action_scheduler_set_average_linear_speed(cocobot_asserv_get_linear_speed());
 }
 
+void cocobot_asserv_slow(void)
+{
+
+  cocobot_asserv_ramp_set_max_speed(&_ramp_dist, CONFIG_LIBCOCOBOT_DIST_RAMP_MAX_SPEED / 2000.0f);
+  cocobot_asserv_ramp_set_max_speed(&_ramp_angu, CONFIG_LIBCOCOBOT_ANGU_RAMP_MAX_SPEED / 4000.0f);
+}
+
 float cocobot_asserv_get_linear_speed(void)
 {
   return cocobot_asserv_ramp_get_max_speed(&_ramp_dist) / 10.0f;

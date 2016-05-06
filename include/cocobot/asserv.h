@@ -58,4 +58,6 @@ void cocobot_asserv_handle_async_console(void);
  */
 float cocobot_asserv_get_linear_speed(void);
 
+void cocobot_asserv_slow(void);
+
 #endif// COCOBOT_ASSERV_H
