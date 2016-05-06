@@ -34,6 +34,7 @@ static cocobot_to_vrep_t buffer_to_vrep;
 static pthread_mutex_t lock;
 static int clientID = -1;
 static int robot_handle = -1;
+static int sub_robot_handle[6] = {-1,-1,-1,-1,-1,-1};
 
 static void * cocobot_vrep_task(void * args)
 {
@@ -47,20 +48,20 @@ static void * cocobot_vrep_task(void * args)
   cocobot_from_vrep_t buffer_from_vrep_unsync;
   buffer_from_vrep_unsync.initialized = 1;
 
-  ret = simxGetObjectHandle(clientID, "scocobotLeftMotor#", &left_motor_handle, simx_opmode_oneshot_wait);
+  ret = simxGetObjectHandle(clientID, "cocobotLeftMotor", &left_motor_handle, simx_opmode_oneshot_wait);
   if (ret != 0)
   {
-    printf("Error %d during remote function call. Could not get object cocobotLeftMotor#\n", ret);
+    printf("Error %d during remote function call. Could not get object cocobotLeftMotor\n", ret);
   }
   else
   {
     simxGetJointPosition(clientID, left_motor_handle, &buffer_from_vrep_unsync.left_motor_position, simx_opmode_streaming);
   }
 
-  ret = simxGetObjectHandle(clientID, "scocobotRightMotor#", &right_motor_handle, simx_opmode_oneshot_wait);
+  ret = simxGetObjectHandle(clientID, "cocobotRightMotor", &right_motor_handle, simx_opmode_oneshot_wait);
   if (ret != 0)
   {
-    printf("Error %d during remote function call. Could not get object cocobotRightMotor#\n", ret);
+    printf("Error %d during remote function call. Could not get object cocobotRightMotor\n", ret);
   }
   else
   {
@@ -87,6 +88,23 @@ static void * cocobot_vrep_task(void * args)
   }
 }
 
+#define CHECK_REMOTE_CALL(CALL,RETURN_CODE) {\
+  RETURN_CODE=CALL; \
+  if (RETURN_CODE != 0) { printf("Error %d during remote function call. Could not get sub robot object\n", RETURN_CODE); } }
+
+
+static void cocobot_vrep_sub_init(void)
+{
+  int ret = 0;
+
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant1", &(sub_robot_handle[0]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant2", &(sub_robot_handle[1]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant3", &(sub_robot_handle[2]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant4", &(sub_robot_handle[3]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "cocobotLeftWheel"  , &(sub_robot_handle[4]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "cocobotRightWheel" , &(sub_robot_handle[5]), simx_opmode_oneshot_wait),ret);
+}
+
 void cocobot_vrep_init(void)
 {
   buffer_from_vrep.initialized = 0;
@@ -107,11 +125,13 @@ void cocobot_vrep_init(void)
   {
     printf("Connected to VREP remote API server with client ID: %d\n", clientID);
 
-    ret = simxLoadModel(clientID, "scocobot.ttm", 1, &robot_handle, simx_opmode_oneshot_wait);
+    ret = simxLoadModel(clientID, "cocobot.ttm", 1, &robot_handle, simx_opmode_oneshot_wait);
     if (ret != 0)
     {
-      printf("Error %d during remote function call. Could not get object scocobot#\n", ret);
+      printf("Error %d during remote function call. Could not get object cocobot\n", ret);
     }
+
+    cocobot_vrep_sub_init();
   }
   else
   {
@@ -160,6 +180,42 @@ void cocobot_vrep_set_motor_command(float left_motor_speed, float right_motor_sp
   pthread_mutex_unlock(&lock);
 }
 
+static void cocobot_vrep_set_sub_position(int axis)
+{
+  int i = 0;
+
+  for (; i < 6; i++)
+  {
+    float pos[3] = {0,0,0};
+    int ret = 0;
+
+    if (axis == 0 || axis == 1)
+    {
+      ret = simxGetObjectPosition(clientID, sub_robot_handle[i], sim_handle_parent, pos, simx_opmode_oneshot);
+      if (ret != 0 && ret != 1)
+      {
+        printf("Error %d during remote function call. Could not get sub robot position\n", ret);
+      }
+
+      pos[axis] = 0;
+
+      ret = simxSetObjectPosition(clientID, sub_robot_handle[i], sim_handle_parent, pos, simx_opmode_oneshot);
+      if (ret != 0 && ret != 1)
+      {
+        printf("Error %d during remote function call. Could not set sub robot position\n", ret);
+      }
+    }
+    else if (axis == 2)
+    {
+      ret = simxSetObjectOrientation(clientID, sub_robot_handle[i], sim_handle_parent, pos, simx_opmode_oneshot);
+      if (ret != 0 && ret != 1)
+      {
+        printf("Error %d during remote function call. Could not set sub robot orientation\n", ret);
+      }
+    }
+  }
+}
+
 void cocobot_vrep_position_set_x(float x)
 {
   float pos[3] = {0,0,0};
@@ -180,6 +236,8 @@ void cocobot_vrep_position_set_x(float x)
     {
       printf("Error %d during remote function call. Could not set robot x\n", ret);
     }
+
+    cocobot_vrep_set_sub_position(0);
   }
   else
   {
@@ -200,12 +258,16 @@ void cocobot_vrep_position_set_y(float y)
     {
       printf("Error %d during remote function call. Could not get robot y\n", ret);
     }
+
     pos[1] = y / 1000;
+
     ret = simxSetObjectPosition(clientID, robot_handle, -1, pos, simx_opmode_oneshot);
     if (ret != 0 && ret != 1)
     {
       printf("Error %d during remote function call. Could not set robot y\n", ret);
     }
+
+    cocobot_vrep_set_sub_position(1);
   }
   else
   {
@@ -222,11 +284,14 @@ void cocobot_vrep_position_set_angle(float angle)
   if (clientID!=-1)
   {
     or[2] = angle * M_PI / 180;
+
     ret = simxSetObjectOrientation(clientID, robot_handle, -1, or, simx_opmode_oneshot);
     if (ret != 0 && ret != 1)
     {
       printf("Error %d during remote function call. Could not set robot orientation\n", ret);
     }
+
+    cocobot_vrep_set_sub_position(2);
   }
   else
   {
