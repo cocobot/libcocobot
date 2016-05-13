@@ -52,11 +52,11 @@ static void cocobot_position_compute(void)
   xSemaphoreTake(mutex, portMAX_DELAY);
 
   //compute new curvilinear distance
-  int32_t new_distance = (int32_t)motor_position[0] + (int32_t)motor_position[1];
+  int32_t new_distance = motor_position[0] + motor_position[1];
   int32_t delta_distance = new_distance - robot_distance;
 
   //compute new angle value
-  int32_t new_angle = (int32_t)motor_position[0] - (int32_t)motor_position[1] + robot_angle_offset;
+  int32_t new_angle = motor_position[0] - motor_position[1] + robot_angle_offset;
   int32_t delta_angle = new_angle - robot_angle;
 
   //compute X/Y coordonate
