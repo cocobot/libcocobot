@@ -158,8 +158,8 @@ void cocobot_vrep_get_motor_position(int32_t motor_position[2])
 
   if(buffer_from_vrep_sync.initialized)
   {
-    motor_position[0] = (int32_t)VREPPOS2TICK(buffer_from_vrep_sync.left_motor_position);
-    motor_position[1] = (int32_t)VREPPOS2TICK(buffer_from_vrep_sync.right_motor_position);
+    motor_position[0] = (int32_t)VREPPOS2TICK(buffer_from_vrep_sync.right_motor_position);
+    motor_position[1] = (int32_t)VREPPOS2TICK(buffer_from_vrep_sync.left_motor_position);
   }
 }
 

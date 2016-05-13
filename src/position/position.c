@@ -27,7 +27,7 @@ static SemaphoreHandle_t mutex;
 static float robot_x=0, robot_y=0;
 static int32_t robot_distance=0,     robot_angle=0, robot_angle_offset=0;
 static int32_t robot_linear_speed=0, robot_angular_velocity=0;
-int32_t motor_position[2] = {0, 0}; // {left, right}
+int32_t motor_position[2] = {0, 0}; // {right, left}
 static int position_debug = 0;
 #ifdef AUSBEE_SIM
 int fake_vrep = 0;
