@@ -35,7 +35,7 @@ static cocobot_to_vrep_t buffer_to_vrep;
 static pthread_mutex_t lock;
 static int clientID = -1;
 static int robot_handle = -1;
-static int sub_robot_handle[6] = {-1,-1,-1,-1,-1,-1};
+static int sub_robot_handle[3] = {-1,-1,-1};
 
 static void * cocobot_vrep_task(void * args)
 {
@@ -98,12 +98,9 @@ static void cocobot_vrep_sub_init(void)
 {
   int ret = 0;
 
-  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant1", &(sub_robot_handle[0]), simx_opmode_oneshot_wait),ret);
-  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant2", &(sub_robot_handle[1]), simx_opmode_oneshot_wait),ret);
-  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant3", &(sub_robot_handle[2]), simx_opmode_oneshot_wait),ret);
-  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinGlissant4", &(sub_robot_handle[3]), simx_opmode_oneshot_wait),ret);
-  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "cocobotLeftWheel"  , &(sub_robot_handle[4]), simx_opmode_oneshot_wait),ret);
-  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "cocobotRightWheel" , &(sub_robot_handle[5]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "patinsGlissants", &(sub_robot_handle[0]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "cocobotLeftWheel"  , &(sub_robot_handle[1]), simx_opmode_oneshot_wait),ret);
+  CHECK_REMOTE_CALL(simxGetObjectHandle(clientID, "cocobotRightWheel" , &(sub_robot_handle[2]), simx_opmode_oneshot_wait),ret);
 }
 
 void cocobot_vrep_init(void)
@@ -185,7 +182,7 @@ static void cocobot_vrep_set_sub_position(int axis)
 {
   int i = 0;
 
-  for (; i < 6; i++)
+  for (; i < 3; i++)
   {
     float pos[3] = {0,0,0};
     int ret = 0;
