@@ -157,28 +157,6 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory);
 uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
 
 /**
- * Execute Douglas-Peucker algorythm on trajectory
- * NOTE: Algorythm is recurcive
- * Arguments:
- *  - trajectory : pointer on the trajectory to linearise
- *  - threshold : max radial distance (used for the algorythm)
- * 
- * Return Value : void
- */
-void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, float threshold);
-
-/**
- * Get radial distance between the point and the line passing by start and end point
- * Arguments:
- *  - start : first bound of the line
- *  - end : last bound of the line
- *  - point : point from witch radial distance is calculated
- *
- * Return Value: the distance
- */
-float cocobot_pathfinder_get_radial_distance(cocobot_point_final_s start, cocobot_point_final_s end, cocobot_point_final_s point);
-
-/**
  * Initilize the final traj struct
  * Arguments:
  *  - in_traj : trajectory from pathfinder
@@ -208,7 +186,7 @@ uint8_t cocobot_pathfinder_find_farest_point(cocobot_trajectory_final_s *traj, u
 /**
  * Concatenate two trajectories into one
  * Arguments:
- *  - first : pointer on the first trajectory. It's also in that trajectory that teh second will be merged
+ *  - first : pointer on the first trajectory. It's also in that trajectory that the second will be merged
  *  - second : pointer on the second trajectory, merged into first
  */
 void cocobot_pathfinder_concatenate_traj(cocobot_trajectory_s *first, cocobot_trajectory_s *second);
