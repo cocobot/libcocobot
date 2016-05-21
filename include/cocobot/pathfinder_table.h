@@ -7,19 +7,23 @@
 #define TABLE_WIDTH 2000
 #define MAXIMUM_NODE_IN_LIST 200
 #define GRID_SIZE 50
-#define MASK_NEW_NODE 0xF00
+#define MASK_NEW_NODE 0xFF00
+#define MASK_REMOVE_ROBOT 0xF0FF
 
 typedef enum
 {
-    NEW_NODE = 0x100,
-    OBSTACLE = 0x200,
-    FORBIDDEN = 0x400, // Zone where the robot can't go
-    SOFT_OBSTACLE = 0x300, //Zone where the robot can eventually go but must be cautious when turning
-    CLOSED_LIST = 0x001,
-    FINAL_TRAJ = 0x002,
-    OPEN_LIST = 0x004,
-    ROBOT = 0x008,
-    TEMPORARY_ALLOWED = 0x010
+    NEW_NODE = 0x1000,
+    OBSTACLE = 0x2000,
+    FORBIDDEN = 0x4000, // Zone where the robot can't go
+    SOFT_OBSTACLE = 0x3000, //Zone where the robot can eventually go but must be cautious when turning
+    CLOSED_LIST = 0x0001,
+    FINAL_TRAJ = 0x0002,
+    OPEN_LIST = 0x0004,
+    TEMPORARY_ALLOWED = 0x008,
+    ROBOT0 = 0x0100,
+    ROBOT1 = 0x0200,
+    ROBOT2 = 0x0400,
+    ROBOT3 = 0x0800
 }cocobot_nodeType_e;
 
 typedef struct
@@ -43,6 +47,9 @@ typedef struct
     uint8_t nb_elements;
 } cocobot_list_s;
 
+
+void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y, cocobot_nodeType_e nodeType);
+void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y, cocobot_nodeType_e nodeType);
 /**
  * Initialize the table used for a*
  * Table width used is TABLE_WIDTH as for table length

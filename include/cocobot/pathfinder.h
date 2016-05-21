@@ -38,6 +38,10 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
  */
 void cocobot_pathfinder_allow_start_zone();
 
+void cocobot_pathfinder_set_robot(int adv_x, int adv_y);
+
+void cocobot_pathfinder_remove_robot(int adv_x, int adv_y);
+
 /**
  * Initialize the pathFinder
  * Arguments : 

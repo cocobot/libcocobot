@@ -49,8 +49,11 @@ static cocobot_trajectory_final_s resultTraj;
 
 void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
 {
-    //Do nothing for all other cases
-    if((node->nodeType & OPEN_LIST) == OPEN_LIST)
+    if(((node->nodeType & ROBOT0) == ROBOT0) && ((node->nodeType & ROBOT1) == ROBOT1) && ((node->nodeType & ROBOT2) == ROBOT2) && ((node->nodeType & ROBOT3) == ROBOT3))
+    {
+        //Do nothing, a robot is an obstacle
+    }
+    else if((node->nodeType & OPEN_LIST) == OPEN_LIST)
     {
         if((parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node) < node->cost)
         {
