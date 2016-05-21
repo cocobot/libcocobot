@@ -52,6 +52,9 @@ typedef struct
  */
 void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
 
+/**
+ * Set start zone allowed token to true to be allowed on next reset
+ */
 void cocobot_pathfinder_set_start_zone_allowed();
 
 /**
