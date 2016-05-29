@@ -51,8 +51,10 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
         if(open_list.nb_elements != 0)
         {
             //get first of the list
-            g_table[open_list.table[0].x][open_list.table[0].y].nodeType &= 0xFF0;
-            g_table[open_list.table[0].x][open_list.table[0].y].nodeType |= CLOSED_LIST;
+            g_table[(unsigned char)open_list.table[0].x][(unsigned char)open_list.table[0].y].nodeType &= 0xFF0;
+            g_table[(unsigned char)open_list.table[0].x][(unsigned char)open_list.table[0].y].nodeType |= CLOSED_LIST;
+            open_list.table[0].nodeType &= 0xFF0;
+            open_list.table[0].nodeType |= CLOSED_LIST;
             current_node = open_list.table[0];
             cocobot_pathfinder_remove_from_list(&open_list, &open_list.table[0]);
         }
@@ -95,13 +97,13 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
 
     while((current_node.x != target_node->x) || (current_node.y != target_node->y))
     {
-        cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", current_node.x, current_node.y);
+        //cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", current_node.x, current_node.y);
         //Treat adjacent node
         for(int i=current_node.x-1; i<=current_node.x+1; i++)
         {
             for(int j=current_node.y-1; j<=current_node.y+1; j++)
             {
-                cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d", i, j);
+                //cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d", i, j);
                 if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != current_node.x) || (j!=current_node.y)))
                 {
                     cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], &current_node);
@@ -111,13 +113,13 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
         //open_list is not null
         if(open_list.nb_elements != 0)
         {
-            cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
+            //cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
             //get first of the list
-            g_table[open_list.table[0].x][open_list.table[0].y].nodeType &= 0xFF0;
-            g_table[open_list.table[0].x][open_list.table[0].y].nodeType |= CLOSED_LIST;
+            g_table[(unsigned char)open_list.table[0].x][(unsigned char)open_list.table[0].y].nodeType &= 0xFF0;
+            g_table[(unsigned char)open_list.table[0].x][(unsigned char)open_list.table[0].y].nodeType |= CLOSED_LIST;
             open_list.table[0].nodeType &= 0xFF0;
             open_list.table[0].nodeType |= CLOSED_LIST;
-            cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
+           // cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
             current_node = open_list.table[0];
             cocobot_pathfinder_remove_from_list(&open_list, &open_list.table[0]);
         }
