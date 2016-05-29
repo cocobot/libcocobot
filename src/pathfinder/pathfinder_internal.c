@@ -60,9 +60,9 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
             node->pY = parent_node->y;
             cocobot_pathfinder_remove_from_list(open_list, node);
             cocobot_pathfinder_add_to_list(open_list, node);
-            cocobot_console_send_asynchronous("DOUGLAS OPEN MOD","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
+            //cocobot_console_send_asynchronous("DOUGLAS OPEN MOD","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
         }
-        cocobot_console_send_asynchronous("DOUGLAS OPEN","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
+        //cocobot_console_send_asynchronous("DOUGLAS OPEN","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
     }
     else if((node->nodeType & CLOSED_LIST) == CLOSED_LIST)
     {
@@ -75,7 +75,7 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
         node->nodeType |= OPEN_LIST;
         node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
         cocobot_pathfinder_add_to_list(open_list, node);
-        cocobot_console_send_asynchronous("DOUGLAS NEW_NODE","x=%d, y=%d px:%d py:%d status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
+        //cocobot_console_send_asynchronous("DOUGLAS NEW_NODE","x=%d, y=%d px:%d py:%d status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
     }
     else if((node->nodeType & TEMPORARY_ALLOWED) == TEMPORARY_ALLOWED)
     {
@@ -84,7 +84,7 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
         node->nodeType |= OPEN_LIST;
         node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
         cocobot_pathfinder_add_to_list(open_list, node);
-        cocobot_console_send_asynchronous("DOUGLAS TEMP","x=%d, y=%d, px=%d, py=%d, status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
+        //cocobot_console_send_asynchronous("DOUGLAS TEMP","x=%d, y=%d, px=%d, py=%d, status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
     }
     else
     {
