@@ -112,13 +112,12 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
         //open_list is not null
         if(open_list.nb_elements != 0)
         {
-            //cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
             //get first of the list
             g_table[(unsigned char)open_list.table[0].x][(unsigned char)open_list.table[0].y].nodeType &= 0xFF0;
             g_table[(unsigned char)open_list.table[0].x][(unsigned char)open_list.table[0].y].nodeType |= CLOSED_LIST;
             open_list.table[0].nodeType &= 0xFF0;
             open_list.table[0].nodeType |= CLOSED_LIST;
-           // cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d ,tatus=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
+            //cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d, status=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
             current_node = open_list.table[0];
             cocobot_pathfinder_remove_from_list(&open_list, &open_list.table[0]);
         }
