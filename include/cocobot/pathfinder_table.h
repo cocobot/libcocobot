@@ -34,12 +34,12 @@ typedef struct
 
 
 /**
- * cocobot_list_t is a sorted list (using the node of each node
+ * cocobot_list_t is a sorted list (using the cost of each node)
  * table[0] is the node of the list with the smallest cost
  */
 typedef struct
 {
-    cocobot_node_s table[MAXIMUM_NODE_IN_LIST];//Arbitrary chosen value
+    cocobot_node_s* table[MAXIMUM_NODE_IN_LIST];//Arbitrary chosen value
     uint8_t nb_elements;
 } cocobot_list_s;
 

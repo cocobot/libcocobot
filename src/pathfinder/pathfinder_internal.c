@@ -131,13 +131,13 @@ void cocobot_pathfinder_add_to_list(cocobot_list_s *list, cocobot_node_s *node)
     //If the list is empty
     if(list->nb_elements == 0)
     {
-        memcpy(&list->table[0], node, sizeof(cocobot_node_s));
+        list->table[0] = node;
     }
     else
     {
         int index = 0;
         //find its position in the list
-        while(node->cost > list->table[index].cost)
+        while(node->cost > list->table[index]->cost)
         {
             index++;
             if(index == list->nb_elements)
@@ -146,8 +146,8 @@ void cocobot_pathfinder_add_to_list(cocobot_list_s *list, cocobot_node_s *node)
         //if the list is not full
         if(index < MAXIMUM_NODE_IN_LIST)
         {
-            memmove(&list->table[index+1], &list->table[index], (list->nb_elements - index + 1) * sizeof(cocobot_node_s));
-            memcpy(&list->table[index], node, sizeof(cocobot_node_s));
+            memmove(&list->table[index+1], &list->table[index], (list->nb_elements - index + 1) * sizeof(cocobot_node_s*));
+            list->table[index] = node;
         }
         else
         {
@@ -170,7 +170,7 @@ int cocobot_pathfinder_remove_from_list(cocobot_list_s *list, cocobot_node_s *no
     else
     {
         int index = 0;
-        while((list->table[index].x != node->x) || (list->table[index].y != node->y))
+        while(list->table[index] != node)
         {
             index++;
             if(index == list->nb_elements)
@@ -179,7 +179,7 @@ int cocobot_pathfinder_remove_from_list(cocobot_list_s *list, cocobot_node_s *no
         if(index != (MAXIMUM_NODE_IN_LIST - 1))
         {
             //cocobot_console_send_asynchronous("REMOVE","x:%d, y:%d, px:%d, py:%d, cost :%f index:%d", list->table[index].x, list->table[index].y, list->table[index].pX, list->table[index].pY, (double)list->table[index].cost, index);
-            memmove(&list->table[index], &list->table[index+1], (list->nb_elements - index - 1) * sizeof(cocobot_node_s));
+            memmove(&list->table[index], &list->table[index+1], (list->nb_elements - index - 1) * sizeof(cocobot_node_s*));
             list->nb_elements--;
         }
         else
