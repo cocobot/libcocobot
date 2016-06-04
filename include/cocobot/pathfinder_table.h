@@ -15,11 +15,11 @@ typedef enum
     NEW_NODE = 0x1000,
     OBSTACLE = 0x2000,
     FORBIDDEN = 0x4000, // Zone where the robot can't go
-    SOFT_OBSTACLE = 0x3000, //Zone where the robot can eventually go but must be cautious when turning
+    SOFT_OBSTACLE = 0x8000, //Zone where the robot can eventually go but must be cautious when turning
     CLOSED_LIST = 0x0001,
     FINAL_TRAJ = 0x0002,
     OPEN_LIST = 0x0004,
-    TEMPORARY_ALLOWED = 0x008,
+    TEMPORARY_ALLOWED = 0x0008,
     ROBOT0 = 0x0100,
     ROBOT1 = 0x0200,
     ROBOT2 = 0x0400,
@@ -38,12 +38,12 @@ typedef struct
 
 
 /**
- * cocobot_list_t is a sorted list (using the node of each node
+ * cocobot_list_t is a sorted list (using the cost of each node)
  * table[0] is the node of the list with the smallest cost
  */
 typedef struct
 {
-    cocobot_node_s table[MAXIMUM_NODE_IN_LIST];//Arbitrary chosen value
+    cocobot_node_s* table[MAXIMUM_NODE_IN_LIST];//Arbitrary chosen value
     uint8_t nb_elements;
 } cocobot_list_s;
 
@@ -59,6 +59,9 @@ void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID
  */
 void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
 
+/**
+ * Set start zone allowed token to true to be allowed on next reset
+ */
 void cocobot_pathfinder_set_start_zone_allowed();
 
 /**
