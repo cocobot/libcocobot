@@ -39,6 +39,22 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
 void cocobot_pathfinder_allow_start_zone();
 
 /**
+ * Set a position for opponent robot
+ * Arguments:
+ *  - adv_x: x position of the opponent (considered as the x center)
+ *  - adv_y: y position of the opponent (considered as the y center)
+ */
+void cocobot_pathfinder_set_robot(int adv_x, int adv_y);
+
+/**
+ * Remove opponent robot (as it is no longer in this position)
+ * Arguments:
+ *  - adv_x: x position of the opponent (considered as the x center)
+ *  - adv_y: y position of the opponent (considered as the y center)
+ */
+void cocobot_pathfinder_remove_robot(int adv_x, int adv_y);
+
+/**
  * Initialize the pathFinder
  * Arguments : 
  *  - robot_length (mm)

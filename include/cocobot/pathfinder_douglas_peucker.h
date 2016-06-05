@@ -50,7 +50,7 @@ uint8_t cocobot_pathfinder_get_next_point(cocobot_trajectory_final_s *trajectory
  *  - target_index : index of the target point in traj
  *  - threshold : threshold used by D-P algorythm
  */
-uint8_t cocobot_pathfinder_find_farest_point(cocobot_trajectory_final_s *traj, uint8_t start_index, uint8_t target_index, float threshold);
+uint8_t cocobot_pathfinder_find_farthest_point(cocobot_trajectory_final_s *traj, uint8_t start_index, uint8_t target_index, float threshold);
 
 /**
  * Concatenate two trajectories into one

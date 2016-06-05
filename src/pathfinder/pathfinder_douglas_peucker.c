@@ -11,7 +11,7 @@ void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, 
     while(start_index != target_index)
     {
         //cocobot_console_send_asynchronous("DOUGLAS:","start_index = %d target_index = %d", start_index, target_index);
-        if(cocobot_pathfinder_find_farest_point(trajectory, start_index, target_index, threshold) == NO_POINT_TO_KEEP)
+        if(cocobot_pathfinder_find_farthest_point(trajectory, start_index, target_index, threshold) == NO_POINT_TO_KEEP)
         {
             start_index = target_index;
             start_index_sav = start_index;
@@ -53,7 +53,7 @@ uint8_t cocobot_pathfinder_get_next_point(cocobot_trajectory_final_s *trajectory
     return i;
 }
 
-uint8_t cocobot_pathfinder_find_farest_point(cocobot_trajectory_final_s *traj, uint8_t start_index, uint8_t target_index, float threshold)
+uint8_t cocobot_pathfinder_find_farthest_point(cocobot_trajectory_final_s *traj, uint8_t start_index, uint8_t target_index, float threshold)
 {
     float d = 0.0;
     float dMax = 0.0;

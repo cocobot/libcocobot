@@ -5,21 +5,23 @@
 
 #define TABLE_LENGTH 3000
 #define TABLE_WIDTH 2000
+#define OPPONENT_HALF_DIAG 225
 #define MAXIMUM_NODE_IN_LIST 200
 #define GRID_SIZE 50
-#define MASK_NEW_NODE 0xF00
+#define MASK_NEW_NODE 0xFF00
+#define MASK_REMOVE_ROBOT 0xF0FF
 
 typedef enum
 {
-    NEW_NODE = 0x100,
-    OBSTACLE = 0x200,
-    FORBIDDEN = 0x400, // Zone where the robot can't go
-    SOFT_OBSTACLE = 0x800, //Zone where the robot can eventually go but must be cautious when turning
-    CLOSED_LIST = 0x001,
-    FINAL_TRAJ = 0x002,
-    OPEN_LIST = 0x004,
-    ROBOT = 0x008,
-    TEMPORARY_ALLOWED = 0x010
+    NEW_NODE = 0x1000,
+    OBSTACLEwith_opponent_detection, = 0x2000,
+    FORBIDDEN = 0x4000, // Zone where the robot can't go
+    SOFT_OBSTACLE = 0x8000, //Zone where the robot can eventually go but must be cautious when turning
+    CLOSED_LIST = 0x0001,
+    FINAL_TRAJ = 0x0002,
+    OPEN_LIST = 0x0004,
+    TEMPORARY_ALLOWED = 0x0008,
+    ROBOT = 0x0100
 }cocobot_nodeType_e;
 
 typedef struct
@@ -34,14 +36,15 @@ typedef struct
 
 
 /**
- * cocobot_list_t is a sorted list (using the node of each node
+ * cocobot_list_t is a sorted list (using the cost of each node)
  * table[0] is the node of the list with the smallest cost
  */
 typedef struct
 {
-    cocobot_node_s table[MAXIMUM_NODE_IN_LIST];//Arbitrary chosen value
+    cocobot_node_s* table[MAXIMUM_NODE_IN_LIST];//Arbitrary chosen value
     uint8_t nb_elements;
 } cocobot_list_s;
+
 
 /**
  * Initialize the table used for a*
@@ -56,6 +59,24 @@ void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID
  * Set start zone allowed token to true to be allowed on next reset
  */
 void cocobot_pathfinder_set_start_zone_allowed();
+
+/**
+ * Set a zone where an opponent robot is located
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x center of the zone
+ *  - y : y center of the zone 
+ */
+void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
+
+/**
+ *Unset a zone where an opponent robot was previously located
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x center of the zone
+ *  - y : y center of the zone 
+ */
+void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
 
 /**
  * Reset the table to initial state
