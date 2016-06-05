@@ -14,7 +14,7 @@
 typedef enum
 {
     NEW_NODE = 0x1000,
-    OBSTACLEwith_opponent_detection, = 0x2000,
+    OBSTACLE = 0x2000,
     FORBIDDEN = 0x4000, // Zone where the robot can't go
     SOFT_OBSTACLE = 0x8000, //Zone where the robot can eventually go but must be cautious when turning
     CLOSED_LIST = 0x0001,
