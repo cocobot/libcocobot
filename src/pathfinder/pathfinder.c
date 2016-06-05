@@ -133,19 +133,6 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
     
     cocobot_pathfinder_set_trajectory(&final_traj);
 
-    if(strcmp(getenv("DEBUG_TABLE"), "1") == 0)
-    {
-        FILE* f = fopen("debug_table.txt","w+");
-        for(int i=0; i<TABLE_LENGTH/GRID_SIZE; i++)
-        {
-            for(int j=0; j<TABLE_WIDTH/GRID_SIZE; j++)
-            {
-                fwrite(&g_table[i][j].nodeType, sizeof(uint16_t), 1, f);
-            }
-        }
-        fclose(f);
-    }
-
     return TRAJECTORY_READY;
 }
 
