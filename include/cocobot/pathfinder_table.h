@@ -5,6 +5,7 @@
 
 #define TABLE_LENGTH 3000
 #define TABLE_WIDTH 2000
+#define OPPONENT_HALF_DIAG 225
 #define MAXIMUM_NODE_IN_LIST 200
 #define GRID_SIZE 50
 #define MASK_NEW_NODE 0xFF00
@@ -20,10 +21,7 @@ typedef enum
     FINAL_TRAJ = 0x0002,
     OPEN_LIST = 0x0004,
     TEMPORARY_ALLOWED = 0x0008,
-    ROBOT0 = 0x0100,
-    ROBOT1 = 0x0200,
-    ROBOT2 = 0x0400,
-    ROBOT3 = 0x0800
+    ROBOT = 0x0100
 }cocobot_nodeType_e;
 
 typedef struct
@@ -48,8 +46,6 @@ typedef struct
 } cocobot_list_s;
 
 
-void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y, cocobot_nodeType_e nodeType);
-void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y, cocobot_nodeType_e nodeType);
 /**
  * Initialize the table used for a*
  * Table width used is TABLE_WIDTH as for table length
@@ -63,6 +59,24 @@ void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID
  * Set start zone allowed token to true to be allowed on next reset
  */
 void cocobot_pathfinder_set_start_zone_allowed();
+
+/**
+ * Set a zone where an opponent robot is located
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x center of the zone
+ *  - y : y center of the zone 
+ */
+void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
+
+/**
+ *Unset a zone where an opponent robot was previously located
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x center of the zone
+ *  - y : y center of the zone 
+ */
+void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
 
 /**
  * Reset the table to initial state

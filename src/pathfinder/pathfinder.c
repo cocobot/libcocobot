@@ -153,29 +153,20 @@ void cocobot_pathfinder_set_robot(int adv_x, int adv_y)
 {
     if(opponent_robot.nbr_slot_used < NBR_OTHER_ROBOT_MAX)
     {
+        //cocobot_console_send_asynchronous("SET ROBOT", "x:%d, y:%d, slot:%d", (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, opponent_robot.nbr_slot_used + 1);
         opponent_robot.other_robot[opponent_robot.nbr_slot_used].x = adv_x;
         opponent_robot.other_robot[opponent_robot.nbr_slot_used].y = adv_y;
-        switch (opponent_robot.nbr_slot_used)
-        {
-            case 0:
-                cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, ROBOT0);
-                break;
-            case 1:
-                cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, ROBOT1);
-                break;
-            default:
-                cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, ROBOT2);
-                break;
-        }
+        cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
         opponent_robot.nbr_slot_used++;
     }
     else
     {
+        //cocobot_console_send_asynchronous("SET ROBOT", "x:%d, y:%d, slot:%d", (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, opponent_robot.nbr_slot_used);
         cocobot_pathfinder_remove_robot(opponent_robot.other_robot[0].x, opponent_robot.other_robot[0].y);
-        memmove(&opponent_robot.other_robot[0], &opponent_robot.other_robot[1], 2*sizeof(cocobot_point_s));
         opponent_robot.other_robot[2].x = adv_x;
         opponent_robot.other_robot[2].y = adv_y;
-        cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, ROBOT2);
+        cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
+        opponent_robot.nbr_slot_used++;
     }
 }
 
@@ -185,18 +176,8 @@ void cocobot_pathfinder_remove_robot(int adv_x, int adv_y)
     {
         if((opponent_robot.other_robot[i].x == adv_x) && (opponent_robot.other_robot[i].y == adv_y))
         {
-            switch (i)
-            {
-                case 0:
-                    cocobot_pathfinder_unset_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, ROBOT0);
-                    break;
-                case 1:
-                    cocobot_pathfinder_unset_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, ROBOT1);
-                    break;
-                default:
-                    cocobot_pathfinder_unset_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, ROBOT2);
-                    break;
-            }
+            //cocobot_console_send_asynchronous("UNSET ROBOT", "x:%d, y:%d, slot:%d", (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, i + 1);
+            cocobot_pathfinder_unset_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
             if(i < (opponent_robot.nbr_slot_used - 1))
             {
                 memmove(&opponent_robot.other_robot[i], &opponent_robot.other_robot[i+1], (opponent_robot.nbr_slot_used - 1 - i) * sizeof(cocobot_point_s));
@@ -204,6 +185,13 @@ void cocobot_pathfinder_remove_robot(int adv_x, int adv_y)
             else
             {
                 memset(&opponent_robot.other_robot[i], 0, sizeof(cocobot_point_s));
+            }
+            opponent_robot.nbr_slot_used--;
+
+            //set all remaining robot to avoid wrong unset caused by two opponent robots closed to each other
+            for(int j = 0; j < opponent_robot.nbr_slot_used; j++)
+            {
+                cocobot_pathfinder_set_robot_zone(g_table, (opponent_robot.other_robot[j].x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - opponent_robot.other_robot[j].y)/GRID_SIZE);
             }
         }
         else
