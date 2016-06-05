@@ -50,7 +50,7 @@ static cocobot_trajectory_final_s resultTraj;
 
 void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
 {
-    if(((node->nodeType & ROBOT0) == ROBOT0) && ((node->nodeType & ROBOT1) == ROBOT1) && ((node->nodeType & ROBOT2) == ROBOT2) && ((node->nodeType & ROBOT3) == ROBOT3))
+    if(((node->nodeType & ROBOT0) == ROBOT0) || ((node->nodeType & ROBOT1) == ROBOT1) || ((node->nodeType & ROBOT2) == ROBOT2) || ((node->nodeType & ROBOT3) == ROBOT3))
     {
         //Do nothing, a robot is an obstacle
     }

@@ -10,6 +10,8 @@
 #define POINT_TO_KEEP 1
 #define NO_POINT_TO_KEEP 0
 
+#define NBR_OTHER_ROBOT_MAX 3
+
 /**
  * A point on the table
  * x in mm
@@ -26,13 +28,12 @@ typedef struct
     int16_t y;
 }cocobot_point_s;
 
-
-//TODO
 typedef struct
 {
     cocobot_point_s trajectory[TRAJECTORY_NBR_POINTS_MAX]; //TODO:Adjust number of points
     uint8_t nbr_points; // Number of points in the trajectory
 }cocobot_trajectory_s;
+
 
 typedef struct 
 {
@@ -46,6 +47,13 @@ typedef struct
     cocobot_point_final_s trajectory[TRAJECTORY_NBR_POINTS_MAX];
     uint8_t nbr_points;
 }cocobot_trajectory_final_s;
+
+
+typedef struct
+{
+    cocobot_point_s other_robot[NBR_OTHER_ROBOT_MAX];
+    uint8_t nbr_slot_used;
+}opponent_table_s;
 
 /**
  * Execute algorythm
