@@ -29,7 +29,14 @@ void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID
     cocobot_pathfinder_set_rectangle(table, TABLE_LENGTH / GRID_SIZE, grid_half_diag, 0, TABLE_WIDTH/GRID_SIZE - grid_half_diag, SOFT_OBSTACLE);  
     cocobot_pathfinder_set_rectangle(table, grid_half_diag, TABLE_WIDTH / GRID_SIZE, 0, 0, SOFT_OBSTACLE);
     cocobot_pathfinder_set_rectangle(table, grid_half_diag, TABLE_WIDTH / GRID_SIZE, TABLE_LENGTH / GRID_SIZE - grid_half_diag, 0, SOFT_OBSTACLE);  
-
+    //little base 
+    cocobot_pathfinder_set_rectangle(table, (80 + 20)/GRID_SIZE + grid_half_diag, (450 + 2 * 20)/GRID_SIZE + 2 * grid_half_diag , 0, (700 - 20)/GRID_SIZE - grid_half_diag, SOFT_OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, (80 + 20)/GRID_SIZE + grid_half_diag, (450 + 2 * 20)/GRID_SIZE + 2 * grid_half_diag, TABLE_LENGTH/GRID_SIZE - ((80 + 20)/GRID_SIZE + grid_half_diag), (700 - 20)/GRID_SIZE - grid_half_diag, SOFT_OBSTACLE);
+    
+    //little base 
+    cocobot_pathfinder_set_rectangle(table, (80 + 20)/GRID_SIZE + grid_half_width, (450 + 2 * 20)/GRID_SIZE + 2 * grid_half_width , 0, (700 - 20)/GRID_SIZE - grid_half_width, SOFT_OBSTACLE);
+    cocobot_pathfinder_set_rectangle(table, (80 + 20)/GRID_SIZE + grid_half_width, (450 + 2 * 20)/GRID_SIZE + 2 * grid_half_width, TABLE_LENGTH/GRID_SIZE - ((80 + 20)/GRID_SIZE + grid_half_width), (700 - 20)/GRID_SIZE - grid_half_width, SOFT_OBSTACLE);
+    
     //Expand walls half width = forbidden 
     cocobot_pathfinder_set_rectangle(table, TABLE_LENGTH / GRID_SIZE, grid_half_width, 0, 0, FORBIDDEN);  
     cocobot_pathfinder_set_rectangle(table, TABLE_LENGTH / GRID_SIZE, grid_half_width, 0, TABLE_WIDTH/GRID_SIZE - grid_half_width, FORBIDDEN);  
